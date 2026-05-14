@@ -500,7 +500,7 @@ function HotelsPage() {
               <div className="sticky top-[180px] space-y-8 h-fit">
                 <div className="bg-white rounded-2xl sm:rounded-3xl p-1 border border-slate-100 shadow-xl shadow-slate-200/30 overflow-hidden">
                   <div className="relative h-60 rounded-[1.75rem] overflow-hidden bg-slate-200">
-                    <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://api.mapbox.com/styles/v1/mapbox/light-v10/static/lonlat:77.1025,28.7041,11/600x400?access_token=pk.xxx')" }} />
+                    <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('https://api.mapbox.com/styles/v1/mapbox/light-v10/static/lonlat:77.1025,28.7041,11/600x400?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}')` }} />
                     <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md p-4 rounded-2xl border border-white flex items-center justify-between">
                       <div>
                         <h4 className="text-sm font-bold text-slate-800">View on Map</h4>

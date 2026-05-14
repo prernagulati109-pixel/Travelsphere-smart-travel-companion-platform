@@ -1,0 +1,15 @@
+node_modules/
+backend/node_modules/
+Travelsphere/node_modules/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+backend/.env
+Travelsphere/.env
+dist/
+Travelsphere/dist/
+build/
+.DS_Store
+*.log
