@@ -7,7 +7,7 @@ import Chat from '../models/Chat.js';
  */
 export const handleChat = async (req, res) => {
   try {
-    console.log("Incoming request to /api/chat");
+    console.log("Incoming request to /api/chatbot/chat");
     
     let chatMessages = req.body.messages;
 

@@ -53,11 +53,7 @@ function PlacePage() {
   const [filterCategory, setFilterCategory] = useState("All");
   const [sortOption, setSortOption] = useState("Price: Low to High");
   const [showItineraryPreview, setShowItineraryPreview] = useState(false);
-  const [showBookingModal, setShowBookingModal] = useState(false);
   const [isBooked, setIsBooked] = useState(false);
-  const [bookingLoading, setBookingLoading] = useState(false);
-  const [paymentStep, setPaymentStep] = useState('summary'); // 'summary' or 'payment'
-  const [paymentMethod, setPaymentMethod] = useState('card'); // 'card' or 'scanner'
   const [selectedTravelFacility, setSelectedTravelFacility] = useState(null);
   const [showTravelFacilityOptions, setShowTravelFacilityOptions] = useState(false);
 
@@ -103,41 +99,27 @@ function PlacePage() {
   };
 
   const handleBookTrip = () => {
-    setBookingLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setBookingLoading(false);
-      setShowBookingModal(true);
-    }, 1500);
-  };
+    const bookingDetails = {
+      type: 'trip',
+      destination: destination.name,
+      travelers: travelers,
+      selectedAttractions: selectedPlaces.map(p => ({
+        name: p.name,
+        price: p.price,
+        category: p.category
+      })),
+      totalPrice: totalTripCost
+    };
 
-   const confirmBooking = async () => {
-    setBookingLoading(true);
-    try {
-      const bookingData = {
-        destination: destination.name,
-        travelers: travelers,
-        travelDate: new Date(),
-        selectedAttractions: selectedPlaces.map(p => ({
-          name: p.name,
-          price: p.price,
-          category: p.category
-        })),
-        totalPrice: totalTripCost,
-        customerName: user?.name || 'Guest User',
-        customerEmail: user?.email || 'guest@example.com'
-      };
-
-      await axios.post('http://localhost:5000/api/bookings', bookingData);
-      
-      setIsBooked(true);
-      setShowBookingModal(false);
-      setPaymentStep('summary');
-    } catch (error) {
-      console.error('Booking failed:', error);
-      alert('Failed to process booking. Please try again.');
-    } finally {
-      setBookingLoading(false);
+    if (!user) {
+      navigate('/auth', { 
+        state: { 
+          from: `/place/${placeName}/payment`,
+          bookingDetails 
+        } 
+      });
+    } else {
+      navigate(`/place/${placeName}/payment`, { state: { bookingDetails } });
     }
   };
 
@@ -483,185 +465,17 @@ function PlacePage() {
                     <Heart size={14} /> Save Plan
                   </button>
                   <button 
-                    className={`book-trip-btn ${isBooked ? 'booked' : ''} ${selectedPlaces.length === 0 ? 'disabled' : ''}`}
+                    className={`book-trip-btn ${selectedPlaces.length === 0 ? 'disabled' : ''}`}
                     onClick={handleBookTrip}
-                    disabled={selectedPlaces.length === 0 || bookingLoading}
+                    disabled={selectedPlaces.length === 0}
                   >
-                    {bookingLoading ? (
-                      <><RefreshCcw size={16} className="spin" /> Processing...</>
-                    ) : isBooked ? (
-                      <><CheckCircle2 size={16} /> Trip Booked!</>
-                    ) : (
-                      <><CreditCard size={16} /> Book Trip Now</>
-                    )}
+                    <CreditCard size={16} /> Book Trip Now
                   </button>
                 </div>
               </div>
             </aside>
           </div>
 
-        {/* Booking Confirmation Modal */}
-        {showBookingModal && (
-          <div className="booking-modal-overlay">
-            <div className="booking-modal-content">
-              <button className="modal-close" onClick={() => {
-                setShowBookingModal(false);
-                setPaymentStep('summary');
-              }}><X size={20} /></button>
-              
-              {paymentStep === 'summary' ? (
-                <>
-                  <div className="modal-header">
-                    <div className="success-icon-wrap">
-                      <ShieldCheck size={40} color="#10b981" />
-                    </div>
-                    <h2>Ready for {destination.name}?</h2>
-                    <p>Review your selection and complete your booking.</p>
-                  </div>
-                  
-                  <div className="modal-body">
-                    <div className="summary-section">
-                      <h4>Trip Summary</h4>
-                      <div className="summary-details">
-                        <div className="summary-row">
-                          <span>Destination</span>
-                          <strong>{destination.name}</strong>
-                        </div>
-                        <div className="summary-row">
-                          <span>Travelers</span>
-                          <strong>{travelers} Adults</strong>
-                        </div>
-                        <div className="summary-row">
-                          <span>Activities</span>
-                          <strong>{selectedPlaces.length} Places</strong>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="itinerary-summary">
-                      <h4>Planned Itinerary</h4>
-                      <div className="mini-timeline">
-                        {selectedPlaces.map((p, i) => (
-                          <div key={i} className="timeline-step">
-                            <div className="step-num">{i+1}</div>
-                            <div className="step-info">
-                              <h5>{p.name}</h5>
-                              <p>₹{p.price.toLocaleString()}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="payment-summary">
-                      <div className="price-total">
-                        <span>Total Amount (Places + Travel)</span>
-                        <h2>₹{totalTripCost.toLocaleString()}</h2>
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        <button className="confirm-booking-btn" onClick={() => setPaymentStep('payment')} style={{ background: '#1e293b' }}>
-                          Pay Now
-                        </button>
-                        <button className="confirm-booking-btn" onClick={() => navigate('/travel', { state: { destination: destination.name, fromBooking: true } })} style={{ background: '#2563eb' }}>
-                          Change Vehicle
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="modal-header">
-                    <button className="back-btn" onClick={() => setPaymentStep('summary')}><ArrowRight size={18} style={{ transform: 'rotate(180deg)' }} /> Back</button>
-                    <h2>Payment Options</h2>
-                    <p>Choose your preferred payment method</p>
-                  </div>
-
-                  <div className="modal-body">
-                    <div className="payment-method-tabs">
-                      <button 
-                        className={`pay-tab ${paymentMethod === 'card' ? 'active' : ''}`}
-                        onClick={() => setPaymentMethod('card')}
-                      >
-                        <CreditCard size={18} />
-                        Card
-                      </button>
-                      <button 
-                        className={`pay-tab ${paymentMethod === 'scanner' ? 'active' : ''}`}
-                        onClick={() => setPaymentMethod('scanner')}
-                      >
-                        <Smartphone size={18} />
-                        Scanner/UPI
-                      </button>
-                    </div>
-
-                    {paymentMethod === 'card' ? (
-                      <div className="card-payment-form slide-down-animation">
-                        <div className="form-group">
-                          <label>Cardholder Name</label>
-                          <input type="text" placeholder="John Doe" />
-                        </div>
-                        <div className="form-group">
-                          <label>Card Number</label>
-                          <div className="input-with-icon">
-                            <CreditCard size={16} color="#64748b" />
-                            <input type="text" placeholder="xxxx xxxx xxxx xxxx" />
-                          </div>
-                        </div>
-                        <div className="form-row">
-                          <div className="form-group">
-                            <label>Expiry Date</label>
-                            <input type="text" placeholder="MM/YY" />
-                          </div>
-                          <div className="form-group">
-                            <label>CVV</label>
-                            <input type="password" placeholder="***" />
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="scanner-payment slide-down-animation">
-                        <div className="qr-container">
-                          <img src="/upi_qr_payment_mockup_1778255378343.png" alt="Payment QR Code" />
-                          <div className="qr-overlay-text">Scan & Pay</div>
-                        </div>
-                        <p className="scanner-hint">Scan this QR code using any UPI app (GPay, PhonePe, Paytm)</p>
-                      </div>
-                    )}
-
-                    <div className="payment-final-action">
-                      <div className="pay-amount-box">
-                        <span>Paying Total</span>
-                        <strong>₹{totalTripCost.toLocaleString()}</strong>
-                      </div>
-                      <button 
-                        className={`confirm-booking-btn ${bookingLoading ? 'loading' : ''}`} 
-                        onClick={confirmBooking}
-                        disabled={bookingLoading}
-                      >
-                        {bookingLoading ? <><RefreshCcw size={18} className="spin" /> Verifying...</> : 'Confirm & Pay Now'}
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Success Toast */}
-        {isBooked && (
-          <div className="booking-success-toast">
-            <div className="toast-content">
-              <CheckCircle2 size={24} color="#10b981" />
-              <div>
-                <h4>Trip Booked Successfully!</h4>
-                <p>Check your email for the itinerary and tickets.</p>
-              </div>
-              <button onClick={() => setIsBooked(false)}><X size={16} /></button>
-            </div>
-          </div>
-        )}
       </div>
       <Footer />
 

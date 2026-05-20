@@ -45,6 +45,8 @@ Your goals:
 4. Mention filters on the Hotels page for accurate results.
 5. Provide travel tips and local insights.
 
+IMPORTANT RULE: The platform's default currency is Indian Rupees (₹). If a user mentions a budget or price without specifying the currency (e.g., "6000"), you MUST assume it is in Indian Rupees (₹) and use the ₹ symbol in your response (e.g., ₹6000 instead of $6000). DO NOT use US Dollars ($) unless explicitly asked by the user.
+
 Respond in a friendly, professional, and helpful tone.
 Keep responses concise but information-rich.
 Use emojis naturally to stay engaging.
@@ -69,7 +71,7 @@ export const getChatResponse = async (messages) => {
     }
 
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       systemInstruction: SYSTEM_INSTRUCTION
     });
 

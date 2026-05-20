@@ -34,10 +34,10 @@ function AuthPage() {
       if (user?.isAdmin) {
         navigate('/dashboard');
       } else {
-        navigate('/');
+        navigate(from, { state: location.state, replace: true });
       }
     }
-  }, [isLoggedIn, user, navigate, pendingAction, setPendingAction, showGoogleMock, isDetecting]);
+  }, [isLoggedIn, user, navigate, pendingAction, setPendingAction, showGoogleMock, isDetecting, from, location.state]);
 
   const handleGoogleClick = () => {
     setIsDetecting(true);
@@ -92,7 +92,7 @@ function AuthPage() {
     
     try {
       await googleLogin(displayName, displayEmail);
-      navigate('/', { replace: true });
+      navigate(from, { state: location.state, replace: true });
     } catch (err) {
       setIsSubmitting(false);
     }
@@ -156,10 +156,10 @@ function AuthPage() {
                 </span>
                 Continue with Google
               </button>
-              <button type="button" className="auth-social-btn facebook-btn">
+              {/* <button type="button" className="auth-social-btn facebook-btn">
                 <span className="auth-social-icon">📘</span>
                 Continue with Facebook
-              </button>
+              </button> */}
             </div>
 
             {error && <div className="auth-error">{error}</div>}

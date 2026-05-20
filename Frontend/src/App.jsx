@@ -6,6 +6,7 @@ import TravelOptionsPage from './pages/TravelOptionsPage';
 import PlanItineraryPage from './pages/PlanItineraryPage';
 import AttractionDetailPage from './pages/AttractionDetailPage';
 import HotelDetailPage from './pages/HotelDetailPage';
+import PaymentPage from './pages/PaymentPage';
 import AuthPage from './pages/AuthPage';
 import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
@@ -31,10 +32,12 @@ function App() {
         <Route path="/explore" element={<ExplorePlacesPage />} />
         <Route path="/hotels" element={<HotelsPage />} />
         <Route path="/hotels/:hotelId" element={<HotelDetailPage />} />
+        <Route path="/hotels/:hotelId/payment" element={<PaymentPage />} />
         <Route path="/travel" element={<TravelOptionsPage />} />
         <Route path="/itinerary" element={<PlanItineraryPage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/place/:placeName" element={<PlacePage />} />
+        <Route path="/place/:placeName/payment" element={<PaymentPage />} />
         <Route path="/place/:placeName/attraction/:attractionId" element={<AttractionDetailPage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
       </Routes>

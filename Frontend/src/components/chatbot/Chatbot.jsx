@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import ChatWindow from './ChatWindow';
 import './chatbot.css';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://localhost:5000/api/chatbot';
 
 const Chatbot = () => {
   const navigate = useNavigate();

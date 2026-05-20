@@ -1,7 +1,12 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import { createContext, useContext, useState } from 'react';
 
-const API_URL = 'http://localhost:5000/api/users';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut
+} from "firebase/auth";
+
+import { auth } from "../firebase";
 
 const AuthContext = createContext({
   user: null,
@@ -19,69 +24,141 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
+
   const [user, setUser] = useState(() => {
-    const saved = sessionStorage.getItem('travelsphere_user');
-    return saved ? JSON.parse(saved) : null;
+    const saved =
+      sessionStorage.getItem(
+        'travelsphere_user'
+      );
+
+    return saved
+      ? JSON.parse(saved)
+      : null;
   });
-  const [pendingAction, setPendingAction] = useState(null);
 
-  const login = async (email, password) => {
-    try {
-      const response = await axios.post(`${API_URL}/login`, { email, password });
-      if (response.data.success) {
-        const u = response.data.user;
-        setUser(u);
-        sessionStorage.setItem('travelsphere_user', JSON.stringify(u));
-        return u;
-      }
-    } catch (error) {
-      throw new Error(error.response?.data?.error || 'Login failed');
-    }
+  const [pendingAction,
+    setPendingAction] =
+    useState(null);
+
+
+  // LOGIN
+
+  const login = async (
+    email,
+    password
+  ) => {
+
+    const result =
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+    const u = {
+      email:
+      result.user.email
+    };
+
+    setUser(u);
+
+    sessionStorage.setItem(
+      "travelsphere_user",
+      JSON.stringify(u)
+    );
+
+    return u;
   };
 
-  const register = async (name, email, password) => {
-    try {
-      const response = await axios.post(`${API_URL}/register`, { name, email, password });
-      if (response.data.success) {
-        const u = response.data.user;
-        setUser(u);
-        sessionStorage.setItem('travelsphere_user', JSON.stringify(u));
-        return u;
-      }
-    } catch (error) {
-      throw new Error(error.response?.data?.error || 'Registration failed');
-    }
+
+  // REGISTER
+
+  const register =
+  async (
+    name,
+    email,
+    password
+  ) => {
+
+    const result =
+    await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+    const u = {
+      name,
+      email:
+      result.user.email
+    };
+
+    setUser(u);
+
+    sessionStorage.setItem(
+      "travelsphere_user",
+      JSON.stringify(u)
+    );
+
+    return u;
   };
 
-  const logout = () => {
+
+  // LOGOUT
+
+  const logout =
+  async () => {
+
+    await signOut(auth);
+
     setUser(null);
-    sessionStorage.removeItem('travelsphere_user');
+
+    sessionStorage.removeItem(
+      "travelsphere_user"
+    );
+
   };
 
-  const googleLogin = async (name, email) => {
-    // For google login, we'll auto-register or login on the backend
-    try {
-      const response = await axios.post(`${API_URL}/register`, { 
-        name, 
-        email, 
-        password: 'google-auth-placeholder' // In a real app, use OAuth tokens
-      });
-      const u = response.data.user || { name, email, isAdmin: false };
-      setUser(u);
-      sessionStorage.setItem('travelsphere_user', JSON.stringify(u));
-      return u;
-    } catch (error) {
-      // If user exists, try to login or just set user
-      const u = { name, email, isAdmin: false };
-      setUser(u);
-      sessionStorage.setItem('travelsphere_user', JSON.stringify(u));
-      return u;
-    }
+
+  // GOOGLE LOGIN MOCK
+  const googleLogin =
+  async (name,email)=>{
+
+    const u={
+      name,
+      email
+    };
+
+    setUser(u);
+
+    sessionStorage.setItem(
+      "travelsphere_user",
+      JSON.stringify(u)
+    );
+
+    return u;
   };
+
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn: !!user, login, register, logout, googleLogin, pendingAction, setPendingAction }}>
+
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoggedIn: !!user,
+        login,
+        register,
+        logout,
+        googleLogin,
+        pendingAction,
+        setPendingAction
+      }}
+    >
+
       {children}
+
     </AuthContext.Provider>
+
   );
+
 }

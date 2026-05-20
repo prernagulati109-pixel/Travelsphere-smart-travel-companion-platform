@@ -5,7 +5,7 @@ import dns from 'node:dns';
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 import cors from 'cors';
 import dotenv from 'dotenv';
-import chatRoutes from './routes/chatRoutes.js';
+import chatbotRoutes from './routes/chatRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -42,7 +42,7 @@ console.log("----------------------------");
 
 
 // Routes
-app.use('/api/chat', chatRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/users', userRoutes);

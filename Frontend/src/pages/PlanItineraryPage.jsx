@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import { fullPlaceData } from '../data/data';
 import { apiService } from '../services/apiService';
 import { pdfGenerator } from '../utils/pdfGenerator';
+import { QRCodeSVG } from 'qrcode.react';
+import { CheckCircle2, RefreshCcw, Copy, CheckCheck } from 'lucide-react';
 
 // Itinerary templates per destination
 const itineraryTemplates = {
@@ -180,6 +182,28 @@ function PlanItineraryPage() {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [paymentStep, setPaymentStep] = useState('summary');
   const [paymentMethod, setPaymentMethod] = useState('card');
+  const [upiCopied, setUpiCopied] = useState(false);
+
+  // Payment verification states
+  const [paymentVerified, setPaymentVerified] = useState(false);
+  const [verifyingPayment, setVerifyingPayment] = useState(false);
+
+  // UPI config
+  const UPI_ID   = 'gulatiprerna676@okaxis';
+  const UPI_NAME = 'TravelSphere';
+  const tripTotal = parseInt(days) * 5000;
+
+  // Automatic mock payment verification on UPI tab click
+  useEffect(() => {
+    if (paymentMethod === 'scanner' && !paymentVerified && !verifyingPayment) {
+      setVerifyingPayment(true);
+      const timer = setTimeout(() => {
+        setPaymentVerified(true);
+        setVerifyingPayment(false);
+      }, 6000); // 6 seconds automatic delay
+      return () => clearTimeout(timer);
+    }
+  }, [paymentMethod, paymentVerified, verifyingPayment]);
 
   const handleCreate = async () => {
     if (!destination.trim()) return;
@@ -491,14 +515,14 @@ function PlanItineraryPage() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', background: '#f1f5f9', padding: '4px', borderRadius: '10px' }}>
-                  <button 
+                  <button
                     onClick={() => setPaymentMethod('card')}
                     style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '7px', background: paymentMethod === 'card' ? 'white' : 'transparent', fontWeight: '600', cursor: 'pointer' }}
                   >Card</button>
-                  <button 
+                  <button
                     onClick={() => setPaymentMethod('scanner')}
-                    style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '7px', background: paymentMethod === 'scanner' ? 'white' : 'transparent', fontWeight: '600', cursor: 'pointer' }}
-                  >Scanner</button>
+                    style={{ flex: 1, padding: '8px', border: 'none', borderRadius: '7px', background: paymentMethod === 'scanner' ? 'white' : 'transparent', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                  >📱 UPI / QR</button>
                 </div>
 
                 {paymentMethod === 'card' ? (
@@ -519,24 +543,95 @@ function PlanItineraryPage() {
                     </div>
                   </div>
                 ) : (
-                  <div style={{ textAlign: 'center', padding: '10px' }}>
-                    <div style={{ width: '150px', height: '150px', margin: '0 auto', border: '2px solid #f1f5f9', borderRadius: '12px', padding: '8px' }}>
-                      <img src="/upi_qr_payment_mockup_1778255378343.png" alt="QR" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '4px 0' }}>
+                    <p style={{ margin: 0, fontSize: '0.83rem', color: '#475569', textAlign: 'center' }}>Scan with any UPI app (GPay, PhonePe, Paytm…)</p>
+                    <div style={{ background: 'white', border: '2px solid #e2e8f0', borderRadius: '18px', padding: '16px', boxShadow: '0 6px 20px rgba(0,0,0,0.07)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700', fontSize: '0.9rem' }}>T</div>
+                        <span style={{ fontWeight: '700', color: '#0f172a', fontSize: '0.9rem' }}>TravelSphere</span>
+                      </div>
+                      <QRCodeSVG
+                        value={`upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_NAME)}&am=${tripTotal}&cu=INR&tn=${encodeURIComponent('Trip Itinerary - TravelSphere')}`}
+                        size={180}
+                        level="H"
+                        includeMargin={false}
+                        style={{ borderRadius: '6px' }}
+                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f8fafc', borderRadius: '8px', padding: '6px 12px', border: '1px solid #e2e8f0' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#475569' }}>UPI ID:</span>
+                        <span style={{ fontSize: '0.77rem', fontWeight: '600', color: '#0f172a' }}>{UPI_ID}</span>
+                        <button onClick={() => { navigator.clipboard.writeText(UPI_ID); setUpiCopied(true); setTimeout(() => setUpiCopied(false), 2000); }} style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '1px', color: upiCopied ? '#10b981' : '#94a3b8', display: 'flex' }}>
+                          {upiCopied ? <CheckCheck size={13} /> : <Copy size={13} />}
+                        </button>
+                      </div>
+                      <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '6px 16px', textAlign: 'center', width: '100%', boxSizing: 'border-box' }}>
+                        <span style={{ fontSize: '0.7rem', color: '#065f46', display: 'block' }}>Amount to pay</span>
+                        <strong style={{ fontSize: '1.2rem', color: '#059669' }}>₹{tripTotal.toLocaleString()}</strong>
+                      </div>
+
+                      {/* Automatic Payment Detector Status */}
+                      <div style={{
+                        padding: '12px 16px',
+                        borderRadius: '12px',
+                        border: '1px solid',
+                        borderColor: paymentVerified ? '#bbf7d0' : '#bae6fd',
+                        background: paymentVerified ? '#f0fdf4' : '#f0f9ff',
+                        color: paymentVerified ? '#15803d' : '#0369a1',
+                        fontWeight: '600',
+                        fontSize: '0.85rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '10px',
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                        transition: 'all 0.3s'
+                      }}>
+                        {verifyingPayment ? (
+                          <>
+                            <RefreshCcw size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                            <div style={{ textAlign: 'left' }}>
+                              <span style={{ display: 'block', fontSize: '0.8rem', fontWeight: 'bold' }}>Waiting for payment detection...</span>
+                              <span style={{ display: 'block', fontSize: '0.7rem', color: '#0284c7', fontWeight: 'normal', marginTop: '2px' }}>Please scan and pay using your mobile app.</span>
+                            </div>
+                          </>
+                        ) : paymentVerified ? (
+                          <>
+                            <CheckCircle2 size={18} />
+                            <div style={{ textAlign: 'left' }}>
+                              <span style={{ display: 'block', fontSize: '0.8rem', fontWeight: 'bold' }}>Payment Verified!</span>
+                              <span style={{ display: 'block', fontSize: '0.7rem', color: '#16a34a', fontWeight: 'normal', marginTop: '2px' }}>Mock UPI Ref: TXN{Math.floor(100000 + Math.random() * 900000)}</span>
+                            </div>
+                          </>
+                        ) : null}
+                      </div>
                     </div>
-                    <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '12px' }}>Scan with any UPI app</p>
+                    <div style={{ display: 'flex', gap: '8px', opacity: 0.7 }}>
+                      {['GPay', 'PhonePe', 'Paytm', 'BHIM'].map(app => (<span key={app} style={{ fontSize: '0.65rem', color: '#64748b', background: '#f1f5f9', padding: '2px 8px', borderRadius: '20px', fontWeight: '600' }}>{app}</span>))}
+                    </div>
                   </div>
                 )}
 
-                <button 
+                <button
                   onClick={confirmBooking}
-                  disabled={bookingLoading}
+                  disabled={bookingLoading || (paymentMethod === 'scanner' && !paymentVerified)}
                   style={{
-                    width: '100%', padding: '16px', background: '#1e293b', color: 'white',
-                    border: 'none', borderRadius: '12px', fontWeight: '700', fontSize: '1rem', cursor: 'pointer',
-                    marginTop: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
+                    width: '100%', padding: '16px',
+                    background: paymentMethod === 'scanner' ? (paymentVerified ? 'linear-gradient(135deg,#10b981,#059669)' : '#94a3b8') : '#1e293b',
+                    color: 'white',
+                    border: 'none', borderRadius: '12px', fontWeight: '700', fontSize: '1rem',
+                    cursor: (bookingLoading || (paymentMethod === 'scanner' && !paymentVerified)) ? 'not-allowed' : 'pointer',
+                    marginTop: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                    boxShadow: paymentMethod === 'scanner' && paymentVerified ? '0 4px 14px rgba(16,185,129,0.35)' : 'none',
+                    transition: 'all 0.3s',
+                    opacity: (bookingLoading || (paymentMethod === 'scanner' && !paymentVerified)) ? 0.7 : 1,
                   }}
                 >
-                  {bookingLoading ? 'Processing...' : `Pay ₹${(parseInt(days) * 5000).toLocaleString()}`}
+                  {bookingLoading ? 'Processing...' : paymentMethod === 'scanner'
+                    ? <><CheckCircle2 size={18} /> I've Paid — Confirm Booking</>
+                    : `Pay ₹${tripTotal.toLocaleString()}`
+                  }
                 </button>
               </>
             )}

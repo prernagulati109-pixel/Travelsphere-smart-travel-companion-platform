@@ -11,7 +11,26 @@ import {
   Navigation, Eye, ChevronLeft, ChevronRight,
   Clock, Zap, Check, Trash2, ArrowUpDown, Menu
 } from 'lucide-react';
-import { allHotels as staticHotels, destinations as staticDestinations } from '../data/data';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import { allHotels as staticHotels, destinations as staticDestinations, fullPlaceData } from '../data/data';
+
+// Fix for default marker icon in react-leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+function ChangeView({ center, zoom }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, zoom);
+  }, [center, zoom, map]);
+  return null;
+}
 import { useWishlist } from '../context/WishlistContext';
 import '../styles/hotels.css';
 import '../styles/hotels-premium.css';
@@ -44,7 +63,7 @@ function HotelsPage() {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
   // New states for enhancements
-  const [priceRange, setPriceRange] = useState(parseInt(searchParams.get('maxPrice')) || 150000);
+  const [priceRange, setPriceRange] = useState(parseInt(searchParams.get('maxPrice')) || 60000);
   const [selectedPropertyTypes, setSelectedPropertyTypes] = useState([]);
   const [selectedAmenities, setSelectedAmenities] = useState(
     searchParams.get('amenity') ? [searchParams.get('amenity')] : []
@@ -109,12 +128,17 @@ function HotelsPage() {
     // Simulate loading
     const timer = setTimeout(() => {
       // Enrich hotels with missing data for filtering demonstration if needed
-      const enrichedHotels = staticHotels.map(hotel => ({
-        ...hotel,
-        type: hotel.type || (hotel.stars >= 5 ? 'Resorts' : 'Hotels'),
-        amenities: hotel.amenities || ['Free Wi-Fi', 'Pool', 'Breakfast', 'Parking', 'Spa', 'Gym'].filter(() => Math.random() > 0.3),
-        hasDeal: hotel.badge?.toLowerCase().includes('off') || hotel.badge?.toLowerCase().includes('deal') || !!hotel.discount || !!hotel.specialOffer
-      }));
+      const enrichedHotels = staticHotels.map(hotel => {
+        const destData = fullPlaceData[hotel.destination] || { mapLat: 28.6139, mapLng: 77.2090 }; // Default to Delhi
+        return {
+          ...hotel,
+          type: hotel.type || (hotel.stars >= 5 ? 'Resorts' : 'Hotels'),
+          amenities: hotel.amenities || ['Free Wi-Fi', 'Pool', 'Breakfast', 'Parking', 'Spa', 'Gym'].filter(() => Math.random() > 0.3),
+          hasDeal: hotel.badge?.toLowerCase().includes('off') || hotel.badge?.toLowerCase().includes('deal') || !!hotel.discount || !!hotel.specialOffer,
+          lat: hotel.lat || (destData.mapLat + (Math.random() - 0.5) * 0.05),
+          lng: hotel.lng || (destData.mapLng + (Math.random() - 0.5) * 0.05),
+        };
+      });
       setHotels(enrichedHotels);
       setLoading(false);
     }, 1500);
@@ -202,6 +226,13 @@ function HotelsPage() {
     return result;
   }, [hotels, searchQuery, priceRange, selectedPropertyTypes, selectedAmenities, minRating, showOnlyDeals, activeFilters, sortBy, isSaleActive]);
 
+  const mapCenter = useMemo(() => {
+    if (filteredHotels.length > 0) {
+      return [filteredHotels[0].lat, filteredHotels[0].lng];
+    }
+    return [28.6139, 77.2090]; // Default Delhi
+  }, [filteredHotels]);
+
   // Reset visible count when filters change to manage page weight
   useEffect(() => {
     setVisibleCount(6);
@@ -212,7 +243,7 @@ function HotelsPage() {
   }, [filteredHotels, visibleCount]);
 
   const clearAllFilters = () => {
-    setPriceRange(150000);
+    setPriceRange(60000);
     setSelectedPropertyTypes([]);
     setSelectedAmenities([]);
     setMinRating(0);
@@ -493,6 +524,20 @@ function HotelsPage() {
                   </AnimatePresence>
                 )}
               </div>
+
+              {filteredHotels.length > visibleCount && (
+                <div className="flex justify-center pt-8">
+                  <motion.button 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center gap-2 px-10 py-4 bg-white border border-slate-200 text-slate-700 font-bold rounded-2xl shadow-sm hover:shadow-md hover:bg-slate-50 transition-all group"
+                    onClick={() => setVisibleCount(filteredHotels.length)}
+                  >
+                    View More Hotels
+                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform text-blue-600" />
+                  </motion.button>
+                </div>
+              )}
             </section>
 
             {/* Right Widgets */}
@@ -500,7 +545,30 @@ function HotelsPage() {
               <div className="sticky top-[180px] space-y-8 h-fit">
                 <div className="bg-white rounded-2xl sm:rounded-3xl p-1 border border-slate-100 shadow-xl shadow-slate-200/30 overflow-hidden">
                   <div className="relative h-60 rounded-[1.75rem] overflow-hidden bg-slate-200">
-                    <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('https://api.mapbox.com/styles/v1/mapbox/light-v10/static/lonlat:77.1025,28.7041,11/600x400?access_token=${import.meta.env.VITE_MAPBOX_TOKEN}')` }} />
+                    <MapContainer 
+                      center={mapCenter} 
+                      zoom={12} 
+                      scrollWheelZoom={false}
+                      className="h-full w-full z-0"
+                      zoomControl={false}
+                    >
+                      <ChangeView center={mapCenter} zoom={12} />
+                      <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                      />
+                      {visibleHotels.map(hotel => (
+                        <Marker key={hotel.id} position={[hotel.lat, hotel.lng]}>
+                          <Popup>
+                            <div className="p-1">
+                              <img src={hotel.img} alt={hotel.name} className="w-full h-20 object-cover rounded-lg mb-2" />
+                              <h5 className="font-bold text-sm m-0">{hotel.name}</h5>
+                              <p className="text-xs text-blue-600 font-bold m-0">₹{hotel.price}</p>
+                            </div>
+                          </Popup>
+                        </Marker>
+                      ))}
+                    </MapContainer>
                     <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-md p-4 rounded-2xl border border-white flex items-center justify-between">
                       <div>
                         <h4 className="text-sm font-bold text-slate-800">View on Map</h4>

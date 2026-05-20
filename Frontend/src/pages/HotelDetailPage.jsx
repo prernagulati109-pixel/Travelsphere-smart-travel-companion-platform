@@ -11,6 +11,7 @@ import {
   Clock, Map as MapIcon, ChevronLeft, Award,
   CheckCircle2, AlertCircle, TrendingUp
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
 import { allHotels } from '../data/data';
 import '../styles/index.css';
@@ -26,9 +27,14 @@ const ROOMS_DATA = [
     beds: "1 extra-large double bed",
     size: "35 m²",
     features: ["Free WiFi", "Air conditioning", "Private bathroom", "Flat-screen TV", "Soundproofing", "Minibar"],
-    price: 0, // Will be calculated based on base price
+    price: 0, // Matches base hotel price exactly
     breakfast: true,
-    cancellation: "Free cancellation before May 10"
+    cancellation: "Free cancellation before May 10",
+    description: "A spacious and luxurious room featuring a plush king-size bed, elegant decor, and modern amenities designed for absolute comfort and relaxation. Perfect for couples or solo travelers looking for a premium stay.",
+    checkIn: "14:00 PM",
+    checkOut: "12:00 PM",
+    facilities: ["24-hour Room Service", "Daily Housekeeping", "In-room Safe", "Dedicated Work Desk", "Iron & Ironing Board"],
+    policies: ["Non-smoking room", "No pets allowed", "Quiet hours 10 PM - 7 AM"]
   },
   {
     id: 2,
@@ -38,9 +44,14 @@ const ROOMS_DATA = [
     beds: "2 single beds",
     size: "32 m²",
     features: ["Free WiFi", "Air conditioning", "Private bathroom", "Flat-screen TV", "Minibar"],
-    price: -500,
+    price: -800, // Budget option — slightly cheaper than base
     breakfast: true,
-    cancellation: "Non-refundable"
+    cancellation: "Non-refundable",
+    description: "Experience comfort in our well-appointed twin room. Designed for friends or colleagues traveling together, it features two premium single beds and a beautiful city view.",
+    checkIn: "14:00 PM",
+    checkOut: "12:00 PM",
+    facilities: ["24-hour Room Service", "Daily Housekeeping", "In-room Safe", "Coffee/Tea Maker"],
+    policies: ["Non-smoking room", "No pets allowed"]
   },
   {
     id: 3,
@@ -50,9 +61,14 @@ const ROOMS_DATA = [
     beds: "1 extra-large double bed + 1 sofa bed",
     size: "55 m²",
     features: ["Free WiFi", "Air conditioning", "Private bathroom", "Balcony", "Sea view", "Coffee machine"],
-    price: 3500,
+    price: 2500, // Premium suite — adds ₹2,500 to base
     breakfast: true,
-    cancellation: "Free cancellation"
+    cancellation: "Free cancellation",
+    description: "Our top-tier suite offering expansive living space, a separate lounge area, and breathtaking sea views from a private balcony. Ultimate luxury and VIP services included.",
+    checkIn: "14:00 PM",
+    checkOut: "12:00 PM",
+    facilities: ["Priority Check-in", "Executive Lounge Access", "Butler Service", "Luxury Toiletries", "Nespresso Machine", "Welcome Fruit Basket"],
+    policies: ["Non-smoking room", "Pets allowed (up to 10kg)", "Complimentary late check-out upon availability"]
   }
 ];
 
@@ -98,12 +114,16 @@ function HotelDetailPage() {
   const { hotelId } = useParams();
   const navigate = useNavigate();
   const { toggleWishlist, isInWishlist } = useWishlist();
+  const { isLoggedIn } = useAuth();
   const [activeImg, setActiveImg] = useState(0);
   const [bookingData, setBookingData] = useState({
     checkIn: '',
     checkOut: '',
     guests: 2
   });
+  const [expandedRoom, setExpandedRoom] = useState(null);
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [showBookingCard, setShowBookingCard] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -140,7 +160,33 @@ function HotelDetailPage() {
   };
 
   const nights = calculateNights();
-  const totalAmount = hotel.price * nights;
+  const roomExtraPrice = selectedRoom ? selectedRoom.price : 0;
+  const totalAmount = (hotel.price + roomExtraPrice) * nights;
+
+  const handleReserve = () => {
+    const bookingDetails = {
+      hotelId,
+      hotelName: hotel.name,
+      roomName: selectedRoom?.name || 'Standard Room',
+      checkIn: bookingData.checkIn,
+      checkOut: bookingData.checkOut,
+      guests: bookingData.guests,
+      nights,
+      totalAmount,
+      price: hotel.price + roomExtraPrice
+    };
+
+    if (!isLoggedIn) {
+      navigate('/auth', { 
+        state: { 
+          from: `/hotels/${hotelId}/payment`,
+          bookingDetails 
+        } 
+      });
+    } else {
+      navigate(`/hotels/${hotelId}/payment`, { state: { bookingDetails } });
+    }
+  };
 
   return (
     <div className="hotel-details-page">
@@ -329,40 +375,119 @@ function HotelDetailPage() {
             <section className="hd-section" id="rooms">
               <h2 className="hd-section-title">Available Rooms</h2>
               <div className="rooms-list">
-                {ROOMS_DATA.map(room => (
-                  <div key={room.id} className="room-card">
-                    <div className="room-img">
-                      <img src={room.image} alt={room.name} />
-                    </div>
-                    <div className="room-info">
-                      <h3>{room.name}</h3>
-                      <div className="room-features">
-                        <div className="room-feature"><Users size={14} /> {room.capacity}</div>
-                        <div className="room-feature"><HotelIcon size={14} /> {room.beds}</div>
-                        <div className="room-feature"><TrendingUp size={14} /> {room.size}</div>
-                      </div>
-                      <div className="room-features" style={{ marginTop: '12px' }}>
-                        {room.features.map((f, i) => (
-                          <div key={i} className="room-feature" style={{ color: '#474747', background: '#f5f5f5', padding: '2px 8px', borderRadius: '4px' }}>
-                            <Check size={12} /> {f}
+                {ROOMS_DATA.map(room => {
+                  const isExpanded = expandedRoom === room.id;
+                  const isActive = selectedRoom?.id === room.id;
+
+                  return (
+                    <div 
+                      key={room.id} 
+                      className={`room-card-wrapper ${isActive ? 'active-selection' : ''}`}
+                      onClick={() => {
+                        if (!isExpanded) setExpandedRoom(room.id);
+                      }}
+                    >
+                      <div className="room-card">
+                        <div className="room-img">
+                          <img src={room.image} alt={room.name} />
+                        </div>
+                        <div className="room-info">
+                          <h3>{room.name}</h3>
+                          <div className="room-features">
+                            <div className="room-feature"><Users size={14} /> {room.capacity}</div>
+                            <div className="room-feature"><HotelIcon size={14} /> {room.beds}</div>
+                            <div className="room-feature"><TrendingUp size={14} /> {room.size}</div>
                           </div>
-                        ))}
+                          <div className="room-features" style={{ marginTop: '12px' }}>
+                            {room.features.map((f, i) => (
+                              <div key={i} className="room-feature" style={{ color: '#474747', background: '#f5f5f5', padding: '2px 8px', borderRadius: '4px' }}>
+                                <Check size={12} /> {f}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="room-policy" style={{ marginTop: '16px', color: '#008009', fontWeight: '600', fontSize: '13px' }}>
+                            <CheckCircle2 size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                            {room.breakfast ? 'Breakfast included' : 'Room only'}
+                            <br />
+                            <CheckCircle2 size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
+                            {room.cancellation}
+                          </div>
+                        </div>
+                        <div className="room-action">
+                          <div className="room-price">₹{(hotel.price + room.price).toLocaleString()}</div>
+                          <div style={{ fontSize: '12px', color: '#474747', marginBottom: '12px' }}>Includes taxes & fees</div>
+                          <button 
+                            className="select-btn" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedRoom(isExpanded ? null : room.id);
+                            }}
+                          >
+                            {isExpanded ? 'Hide Details' : 'View Details'}
+                          </button>
+                        </div>
                       </div>
-                      <div className="room-policy" style={{ marginTop: '16px', color: '#008009', fontWeight: '600', fontSize: '13px' }}>
-                        <CheckCircle2 size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                        {room.breakfast ? 'Breakfast included' : 'Room only'}
-                        <br />
-                        <CheckCircle2 size={14} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                        {room.cancellation}
+
+                      {/* Expanded Section */}
+                      <div className={`room-expanded-details ${isExpanded ? 'open' : ''}`}>
+                        <div className="expanded-content">
+                          <p className="expanded-desc">{room.description}</p>
+                          
+                          <div className="expanded-grid">
+                            <div className="expanded-col">
+                              <h4>Room Details</h4>
+                              <ul>
+                                <li><strong>Size:</strong> {room.size}</li>
+                                <li><strong>Bed Type:</strong> {room.beds}</li>
+                                <li><strong>Capacity:</strong> {room.capacity}</li>
+                              </ul>
+                            </div>
+                            <div className="expanded-col">
+                              <h4>Check-in / Check-out</h4>
+                              <ul>
+                                <li><strong>Check-in from:</strong> {room.checkIn}</li>
+                                <li><strong>Check-out before:</strong> {room.checkOut}</li>
+                                <li><strong>Cancellation:</strong> {room.cancellation}</li>
+                              </ul>
+                            </div>
+                          </div>
+                          
+                          <div className="expanded-grid" style={{ marginTop: '16px' }}>
+                            <div className="expanded-col">
+                              <h4>Facilities</h4>
+                              <ul className="facilities-list">
+                                {room.facilities.map((fac, idx) => <li key={idx}><Check size={12}/> {fac}</li>)}
+                              </ul>
+                            </div>
+                            <div className="expanded-col">
+                              <h4>Hotel Policies</h4>
+                              <ul className="policies-list">
+                                {room.policies.map((pol, idx) => <li key={idx}><AlertCircle size={12}/> {pol}</li>)}
+                              </ul>
+                            </div>
+                          </div>
+                          
+                          <div className="expanded-footer">
+                            <button 
+                              className="continue-booking-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedRoom(room);
+                                setShowBookingCard(true);
+                                setTimeout(() => {
+                                  const sidebar = document.querySelector('.hd-sticky-sidebar');
+                                  if (sidebar) sidebar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }, 100);
+                              }}
+                            >
+                              Continue Booking
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="room-action">
-                      <div className="room-price">₹{(hotel.price + room.price).toLocaleString()}</div>
-                      <div style={{ fontSize: '12px', color: '#474747', marginBottom: '12px' }}>Includes taxes & fees</div>
-                      <button className="select-btn" onClick={() => alert(`Selected ${room.name}`)}>Select Room</button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
 
@@ -482,62 +607,72 @@ function HotelDetailPage() {
 
           {/* Sticky Booking Sidebar */}
           <aside className="hd-sticky-sidebar">
-            <div className="booking-card">
-              <div className="booking-price">
-                <h2>₹{hotel.price.toLocaleString()}</h2>
-                <span>Includes taxes and fees</span>
-              </div>
-
-              <div className="booking-inputs">
-                <div className="booking-input-group">
-                  <label>Check-in</label>
-                  <input type="date" value={bookingData.checkIn} onChange={e => setBookingData(prev => ({...prev, checkIn: e.target.value}))} />
-                </div>
-                <div className="booking-input-group">
-                  <label>Check-out</label>
-                  <input type="date" value={bookingData.checkOut} onChange={e => setBookingData(prev => ({...prev, checkOut: e.target.value}))} />
-                </div>
-                <div className="booking-input-group full">
-                  <label>Guests</label>
-                  <select value={bookingData.guests} onChange={e => setBookingData(prev => ({...prev, guests: e.target.value}))}>
-                    <option value="1">1 adult</option>
-                    <option value="2">2 adults</option>
-                    <option value="3">3 adults</option>
-                    <option value="4">4 adults</option>
-                  </select>
+            {!showBookingCard ? (
+              <div className="booking-card placeholder-card">
+                <div className="placeholder-content">
+                  <HotelIcon size={48} color="#006ce4" style={{ marginBottom: '16px', opacity: 0.8 }} />
+                  <h3>Select a room to continue booking</h3>
+                  <p>Choose your preferred room from the available options to see pricing and reserve your spot.</p>
                 </div>
               </div>
-
-              <button className="reserve-btn" onClick={() => alert('Booking confirmed! We have sent a confirmation email.')}>
-                Reserve your spot
-              </button>
-
-              <div className="booking-perks">
-                <div className="perk-item"><Check size={16} /> Free cancellation</div>
-                <div className="perk-item"><Check size={16} /> No prepayment needed</div>
-                <div className="perk-item"><Award size={16} /> Best price guaranteed</div>
-              </div>
-
-              <div className="price-breakdown">
-                <div className="breakdown-row">
-                  <span>₹{hotel.price.toLocaleString()} x {nights} nights</span>
-                  <span>₹{totalAmount.toLocaleString()}</span>
+            ) : (
+              <div className="booking-card">
+                <div className="booking-price">
+                  <h2>₹{(hotel.price + (selectedRoom?.price || 0)).toLocaleString()}</h2>
+                  <span>Includes taxes and fees</span>
                 </div>
-                <div className="breakdown-row">
-                  <span>Taxes & fees</span>
-                  <span>₹0</span>
+  
+                <div className="booking-inputs">
+                  <div className="booking-input-group">
+                    <label>Check-in</label>
+                    <input type="date" value={bookingData.checkIn} onChange={e => setBookingData(prev => ({...prev, checkIn: e.target.value}))} />
+                  </div>
+                  <div className="booking-input-group">
+                    <label>Check-out</label>
+                    <input type="date" value={bookingData.checkOut} onChange={e => setBookingData(prev => ({...prev, checkOut: e.target.value}))} />
+                  </div>
+                  <div className="booking-input-group full">
+                    <label>Guests</label>
+                    <select value={bookingData.guests} onChange={e => setBookingData(prev => ({...prev, guests: e.target.value}))}>
+                      <option value="1">1 adult</option>
+                      <option value="2">2 adults</option>
+                      <option value="3">3 adults</option>
+                      <option value="4">4 adults</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="breakdown-total">
-                  <span>Total</span>
-                  <span>₹{totalAmount.toLocaleString()}</span>
+  
+                <button className="reserve-btn" onClick={handleReserve}>
+                  Reserve your spot
+                </button>
+  
+                <div className="booking-perks">
+                  <div className="perk-item"><Check size={16} /> Free cancellation</div>
+                  <div className="perk-item"><Check size={16} /> No prepayment needed</div>
+                  <div className="perk-item"><Award size={16} /> Best price guaranteed</div>
+                </div>
+  
+                <div className="price-breakdown">
+                  <div className="breakdown-row">
+                    <span>{selectedRoom?.name || 'Room'} x {nights} nights</span>
+                    <span>₹{totalAmount.toLocaleString()}</span>
+                  </div>
+                  <div className="breakdown-row">
+                    <span>Taxes & fees</span>
+                    <span>₹0</span>
+                  </div>
+                  <div className="breakdown-total">
+                    <span>Total</span>
+                    <span>₹{totalAmount.toLocaleString()}</span>
+                  </div>
+                </div>
+  
+                <div style={{ marginTop: '20px', padding: '12px', background: '#fff9e6', borderRadius: '8px', border: '1px solid #ffeeba', fontSize: '12px' }}>
+                  <AlertCircle size={14} style={{ marginRight: '8px', verticalAlign: 'middle', color: '#856404' }} />
+                  Prices may increase, so book now!
                 </div>
               </div>
-
-              <div style={{ marginTop: '20px', padding: '12px', background: '#fff9e6', borderRadius: '8px', border: '1px solid #ffeeba', fontSize: '12px' }}>
-                <AlertCircle size={14} style={{ marginRight: '8px', verticalAlign: 'middle', color: '#856404' }} />
-                Prices may increase, so book now!
-              </div>
-            </div>
+            )}
 
             <div style={{ marginTop: '24px', padding: '20px', border: '1px solid #e7e7e7', borderRadius: '12px', display: 'flex', gap: '16px' }}>
               <Info size={24} color="#006ce4" />

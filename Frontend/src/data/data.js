@@ -578,7 +578,7 @@ export const allHotels = [
     users: '995',
     stars: 3,
     badge: 'Best Price Guarantee',
-    img: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=600&q=80' 
+    img: 'https://bloomrooms-janpath.delhitophotel.com/data/Photos/OriginalPhoto/10700/1070028/1070028901/new-delhi-bloomrooms-janpath-photo-1.JPEG' 
   },
   { 
     id: 2,
@@ -598,7 +598,7 @@ export const allHotels = [
     destination: 'Paris',
     name: 'Le Meurice', 
     location: 'Rue de Rivoli', 
-    price: '65,000', 
+    price: '12,500', 
     rating: '9.2', 
     ratingLabel: 'Exceptional',
     users: '1.2k',
@@ -611,33 +611,33 @@ export const allHotels = [
     destination: 'Paris',
     name: 'Hotel Plaza Athénée', 
     location: 'Avenue Montaigne', 
-    price: '85,000', 
+    price: '15,800', 
     rating: '9.5', 
     ratingLabel: 'Exceptional',
     users: '800',
     stars: 5,
     badge: 'Paris Favorite',
-    img: 'https://plaza-athenee-hotel-paris.at-hotels.com/data/Photos/OriginalPhoto/13060/1306025/1306025239.JPEG' 
+    img: 'https://www.stefanegirard.fr/wp-content/uploads/2024/11/hotel-plaza-athenee.webp' 
   },
   { 
     id: 5,
     destination: 'Kyoto',
     name: 'The Ritz-Carlton, Kyoto', 
     location: 'Nakagyo Ward', 
-    price: '55,000', 
+    price: '11,200', 
     rating: '9.4', 
     ratingLabel: 'Exceptional',
     users: '500',
     stars: 5,
     badge: 'Cultural Stay',
-    img: 'https://images.unsplash.com/photo-1528154291023-a6525fabe5b4?auto=format&fit=crop&w=600&q=80' 
+    img: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/25/3b/5e/99/hotel-exterior.jpg?w=1400&h=-1&s=1' 
   },
   { 
     id: 6,
     destination: 'Maldives',
     name: 'Soneva Jani', 
     location: 'Noonu Atoll', 
-    price: '1,20,000', 
+    price: '19,500', 
     rating: '9.8', 
     ratingLabel: 'Perfect',
     users: '300',
@@ -650,169 +650,169 @@ export const allHotels = [
     destination: 'New York',
     name: 'The Plaza Hotel', 
     location: 'Fifth Avenue', 
-    price: '75,000', 
+    price: '14,750', 
     rating: '9.0', 
     ratingLabel: 'Excellent',
     users: '2.5k',
     stars: 5,
     badge: 'Iconic',
-    img: 'https://images.unsplash.com/photo-1549924231-f129b911e442?auto=format&fit=crop&w=600&q=80' 
+    img: 'https://tse3.mm.bing.net/th/id/OIP.RG7fuTGjz4zOJZQc5dONBwHaDw?pid=Api&P=0&h=180' 
   },
   { 
     id: 8,
     destination: 'Tokyo',
     name: 'Park Hyatt Tokyo', 
     location: 'Shinjuku', 
-    price: '48,000', 
+    price: '9,800', 
     rating: '9.1', 
     ratingLabel: 'Exceptional',
     users: '1k',
     stars: 5,
     badge: 'Skyline View',
-    img: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=600&q=80' 
+    img: 'https://pix10.agoda.net/hotelImages/9067708/0/18813801087d442c786111487957c5da.jpg?s=1024x768' 
   },
   {
     id: 9,
     destination: 'Bali',
     name: 'AYANA Resort Bali',
     location: 'Jimbaran',
-    price: '28,000',
+    price: '7,400',
     rating: '9.3',
     ratingLabel: 'Exceptional',
     users: '4.2k',
     stars: 5,
     badge: 'Ocean Front',
-    img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80'
+    img: 'https://files.ayana.com/r/kv-01_NHuAJw.webp'
   },
   {
     id: 10,
     destination: 'Rome',
     name: 'Hotel Hassler',
     location: 'Trinità dei Monti',
-    price: '72,000',
+    price: '13,600',
     rating: '9.6',
     ratingLabel: 'Exceptional',
     users: '850',
     stars: 5,
     badge: 'Top Rated',
-    img: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=600&q=80'
+    img: 'https://cdn1.matadornetwork.com/blogs/1/2023/12/Hassler-hotel-exterior.jpeg'
   },
   {
     id: 11,
     destination: 'Santorini',
     name: 'Grace Hotel',
     location: 'Imerovigli',
-    price: '95,000',
+    price: '18,900',
     rating: '9.7',
     ratingLabel: 'Perfect',
     users: '600',
     stars: 5,
     badge: 'Caldera View',
-    img: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=600&q=80'
+    img: 'https://www.vivesantorini.com/wp-content/uploads/2023/04/grace.jpg'
   },
   {
     id: 12,
     destination: 'Dubai',
     name: 'Burj Al Arab Jumeirah',
     location: 'Umm Suqeim',
-    price: '1,50,000',
+    price: '19,800',
     rating: '9.9',
     ratingLabel: 'Perfect',
     users: '3k',
     stars: 7,
     badge: 'Ultra Luxury',
-    img: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=600&q=80'
+    img: 'https://www.timeoutdubai.com/cloud/timeoutdubai/2021/10/01/Burj-Al-Arab-Jumeirah---Aerial-at-Sunset.jpg'
   },
   {
     id: 13,
     destination: 'London',
     name: 'The Savoy',
     location: 'Strand, City of Westminster',
-    price: '68,000',
+    price: '16,200',
     rating: '9.4',
     ratingLabel: 'Exceptional',
     users: '2k',
     stars: 5,
     badge: 'Historical',
-    img: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=600&q=80'
+    img: 'https://static.prod.r53.tablethotels.com/media/ecs/global/michelin-articles/Missing/UK/1367173.jpg'
   },
   {
     id: 14,
     destination: 'Sydney',
     name: 'Park Hyatt Sydney',
     location: 'The Rocks',
-    price: '82,000',
+    price: '17,500',
     rating: '9.5',
     ratingLabel: 'Exceptional',
     users: '1.5k',
     stars: 5,
     badge: 'Harbour View',
-    img: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=600&q=80'
+    img: 'https://www.worldwideescapes.co.uk/wp-content/uploads/2015/04/SYDPH_P079_Exterior_52616.jpg'
   },
   {
     id: 15,
     destination: 'Bangkok',
     name: 'Mandarin Oriental',
     location: 'Charoen Krung Road',
-    price: '45,000',
+    price: '8,600',
     rating: '9.6',
     ratingLabel: 'Exceptional',
     users: '2.2k',
     stars: 5,
     badge: 'River View',
-    img: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=600&q=80'
+    img: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=600&q=80'
   },
   {
     id: 16,
     destination: 'Istanbul',
     name: 'Four Seasons Sultanahmet',
     location: 'Sultanahmet',
-    price: '58,000',
+    price: '10,400',
     rating: '9.5',
     ratingLabel: 'Exceptional',
     users: '1.1k',
     stars: 5,
     badge: 'Historic Stay',
-    img: 'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=600&q=80'
+    img: 'https://tse3.mm.bing.net/th/id/OIP.wjBof4tAY3Z0jpADr-QElwHaE8?pid=Api&P=0&h=180'
   },
   {
     id: 17,
     destination: 'Barcelona',
     name: 'W Barcelona',
     location: 'La Barceloneta',
-    price: '42,000',
+    price: '8,200',
     rating: '9.1',
     ratingLabel: 'Exceptional',
     users: '3.5k',
     stars: 5,
     badge: 'Beachfront',
-    img: 'https://images.unsplash.com/photo-1583422409516-2895a77efded?auto=format&fit=crop&w=600&q=80'
+    img: 'https://w.barcelonahotel.org/data/Photos/OriginalPhoto/13613/1361340/1361340506.JPEG'
   },
   {
     id: 18,
     destination: 'Bali',
     name: 'Potato Head Studios',
     location: 'Seminyak',
-    price: '18,000',
+    price: '5,900',
     rating: '9.2',
     ratingLabel: 'Exceptional',
     users: '1.8k',
     stars: 5,
     badge: 'Creative Stay',
-    img: 'https://images.unsplash.com/photo-1555400038-63f5ba517a47?auto=format&fit=crop&w=600&q=80'
+    img: 'https://www.katiecaftravel.com/wp-content/uploads/2023/09/potato_head_Beach_club_seminyak_bali-2.jpg'
   },
   {
     id: 19,
     destination: 'Rome',
     name: 'Hotel de Russie',
     location: 'Via del Babuino',
-    price: '68,000',
+    price: '14,300',
     rating: '9.4',
     ratingLabel: 'Exceptional',
     users: '700',
     stars: 5,
     badge: 'Secret Garden',
-    img: 'https://images.unsplash.com/photo-1531572753322-ad063cecc140?auto=format&fit=crop&w=600&q=80'
+    img: 'https://www.roccofortehotels.com/media/dhyeohjs/rfh-hotel-de-russie-le-jardin-de-russie-7122-jg-aug-17.jpg'
   }
 ];
 

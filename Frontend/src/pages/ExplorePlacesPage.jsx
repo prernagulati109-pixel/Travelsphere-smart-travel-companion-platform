@@ -22,7 +22,7 @@ function ExplorePlacesPage() {
   const [tripDays, setTripDays] = useState('3 Days');
   const [selectedDate, setSelectedDate] = useState('');
   const [travelType, setTravelType] = useState('Family');
-  const [category, setCategory] = useState('Mountains');
+  // const [category, setCategory] = useState('Mountains');
   const [isPlanning, setIsPlanning] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(4);
   const [mapCenter, setMapCenter] = useState([20, 78]); // Center of India as default
@@ -129,7 +129,7 @@ function ExplorePlacesPage() {
               </select>
             </div>
           </div>
-          <div className="mockup-filter-group">
+          {/* <div className="mockup-filter-group">
             <label>Category</label>
             <div className="mockup-input-wrap">
               <span className="icon">🏔️</span>
@@ -139,7 +139,7 @@ function ExplorePlacesPage() {
                 <option>Cities</option>
               </select>
             </div>
-          </div>
+          </div> */}
           <div className="mockup-filter-btn-group">
             <button className="mockup-plan-btn" onClick={handlePlanTrip} style={{ cursor: 'pointer' }}>
               {isPlanning ? 'Planning...' : '✨ Plan My Trip'}
@@ -152,7 +152,7 @@ function ExplorePlacesPage() {
           <div className="mockup-section-header">
             <div>
               <h2>Recommended for You ✈️</h2>
-              <p>Best picks based on your budget (₹{budget}) & {tripDays} trip</p>
+              {/* <p>Best picks based on your budget (₹{budget}) & {tripDays} trip</p> */}
             </div>
             <a href="#" className="view-all-link" onClick={(e) => { e.preventDefault(); setShowAllRecommended(!showAllRecommended); }}>
               {showAllRecommended ? 'View Less' : 'View All >'}
