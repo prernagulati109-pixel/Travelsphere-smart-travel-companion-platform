@@ -17,8 +17,19 @@ function AttractionDetailPage() {
   const [loading, setLoading] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
   
-  const place = fullPlaceData[placeName] || fullPlaceData['Paris'];
-  const attraction = place.attractions.find(a => a.name === attractionId) || place.attractions[0];
+  const normalizeSlug = (value) =>
+    value
+      ? value.toString().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+      : '';
+
+  const placeKey =
+    Object.keys(fullPlaceData).find((key) => normalizeSlug(key) === placeName) ||
+    Object.keys(fullPlaceData).find((key) => normalizeSlug(fullPlaceData[key].name) === placeName);
+
+  const place = fullPlaceData[placeKey] || fullPlaceData['Paris'];
+  const attraction =
+    place.attractions.find((a) => normalizeSlug(a.name) === attractionId) ||
+    place.attractions[0];
 
   return (
     <div className="attraction-detail-modern">

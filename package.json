@@ -1,0 +1,25 @@
+{
+  "name": "travelsphere-final",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "backend:start": "cd backend && npm start",
+    "backend:dev": "cd backend && npm run dev",
+    "frontend:dev": "cd Frontend && npm run dev",
+    "frontend:build": "cd Frontend && npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prernagulati109-pixel/Travelsphere-smart-travel-companion-platform.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/prernagulati109-pixel/Travelsphere-smart-travel-companion-platform/issues"
+  },
+  "homepage": "https://github.com/prernagulati109-pixel/Travelsphere-smart-travel-companion-platform#readme"
+}
