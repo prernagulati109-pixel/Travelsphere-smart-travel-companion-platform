@@ -122,11 +122,11 @@ function Navbar({ activePage }) {
           {isLoggedIn ? (
             <div className="user-dropdown">
               <img 
-                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random&color=fff&bold=true`} 
-                alt={user.name} 
+                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.email || 'User')}&background=random&color=fff&bold=true`} 
+                alt={user.name || 'User'} 
               />
               <div className="user-name-wrap">
-                <span className="hi-text">Hi, {user.name.split(' ')[0]}</span>
+                <span className="hi-text">Hi, {user.name ? user.name.split(' ')[0] : 'User'}</span>
                 <span className="user-name">My Profile</span>
               </div>
               <ChevronDown size={14} />

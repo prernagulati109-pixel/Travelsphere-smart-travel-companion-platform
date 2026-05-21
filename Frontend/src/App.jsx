@@ -18,10 +18,22 @@ import TermsPage from './pages/Terms';
 import PrivacyPage from './pages/Privacy';
 import Chatbot from './components/chatbot/Chatbot';
 
+// Admin Imports
+import { AdminProvider } from './context/AdminContext';
+import AdminRoute from './components/admin/AdminRoute';
+import AdminLayout from './components/admin/AdminLayout';
+import AdminLogin from './pages/admin/AdminLogin';
+import DashboardOverview from './pages/admin/DashboardOverview';
+import HotelManagement from './pages/admin/HotelManagement';
+import RoomManagement from './pages/admin/RoomManagement';
+import UserManagement from './pages/admin/UserManagement';
+import BookingManagement from './pages/admin/BookingManagement';
+
 function App() {
   return (
-    <>
+    <AdminProvider>
       <Routes>
+        {/* User Routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
@@ -40,9 +52,30 @@ function App() {
         <Route path="/place/:placeName/payment" element={<PaymentPage />} />
         <Route path="/place/:placeName/attraction/:attractionId" element={<AttractionDetailPage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
+
+        {/* Admin Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        
+        <Route path="/admin" element={<AdminRoute />}>
+          <Route element={<AdminLayout />}>
+            <Route path="dashboard" element={<DashboardOverview />} />
+            <Route path="hotels" element={<HotelManagement />} />
+            <Route path="rooms" element={<RoomManagement />} />
+            <Route path="bookings" element={<BookingManagement />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="payments" element={<div className="p-8">Payments (Coming Soon)</div>} />
+            <Route path="reviews" element={<div className="p-8">Reviews (Coming Soon)</div>} />
+            <Route path="offers" element={<div className="p-8">Offers (Coming Soon)</div>} />
+          </Route>
+        </Route>
       </Routes>
-      <Chatbot />
-    </>
+      
+      {/* Show Chatbot only if not on an admin route (this can be checked via location hook, but keeping it simple for now) */}
+      <Routes>
+        <Route path="/admin/*" element={null} />
+        <Route path="*" element={<Chatbot />} />
+      </Routes>
+    </AdminProvider>
   );
 }
 
