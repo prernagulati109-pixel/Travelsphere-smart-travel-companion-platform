@@ -57,11 +57,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/admin', adminRoutes);
 
-app.get('*', (req, res) => {
-  if (req.originalUrl.startsWith('/api/')) {
-    return res.status(404).json({ error: 'API route not found' });
-  }
-  res.sendFile(path.join(frontendBuildPath, 'index.html'));
+app.use((req, res) => {
+  res.sendFile(path.join(__dirname, "../Frontend/dist/index.html"));
 });
 
 app.listen(PORT, () => {
