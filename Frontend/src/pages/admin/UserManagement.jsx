@@ -1,84 +1,110 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Ban, Trash2, ShieldCheck, Mail, Calendar } from 'lucide-react';
+import { Users, Shield, ShieldAlert, Trash2, Search, Loader2 } from 'lucide-react';
 import { adminApi } from '../../services/adminApi';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Mock data if API is not fully ready
+  const mockUsers = [
+    { _id: '1', name: 'John Doe', email: 'john@example.com', role: 'user', createdAt: '2023-01-15' },
+    { _id: '2', name: 'Admin User', email: 'admin@travelsphere.com', role: 'admin', createdAt: '2023-01-10' },
+    { _id: '3', name: 'Jane Smith', email: 'jane@example.com', role: 'user', createdAt: '2023-02-20' },
+  ];
 
   useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const data = await adminApi.getUsers(); // Adjust to your actual API call
+        if (data && data.success) {
+          setUsers(data.data);
+        } else {
+          setUsers(mockUsers);
+        }
+      } catch (error) {
+        console.error("Failed to fetch users", error);
+        setUsers(mockUsers);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchUsers();
   }, []);
 
-  const fetchUsers = async () => {
-    try {
-      const data = await adminApi.getUsers();
-      if (data.success) {
-        setUsers(data.data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch users", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteUser = async (id) => {
-    if (window.confirm("Are you sure you want to permanently delete this user?")) {
-      try {
-        await adminApi.deleteUser(id);
-        fetchUsers();
-      } catch (error) {
-        console.error("Failed to delete user", error);
-      }
-    }
-  };
-
-  const toggleBanStatus = async (id, currentStatus) => {
-    const action = currentStatus ? "unban" : "ban";
+  const handleAction = async (userId, action) => {
     if (window.confirm(`Are you sure you want to ${action} this user?`)) {
       try {
-        await adminApi.banUser(id, !currentStatus);
-        fetchUsers();
+        // Mocking action for now
+        setUsers(users.map(u => {
+          if (u._id === userId) {
+            if (action === 'promote') return { ...u, role: 'admin' };
+            if (action === 'block') return { ...u, role: 'blocked' };
+          }
+          return u;
+        }).filter(u => action === 'delete' ? u._id !== userId : true));
+        
+        // Real API call here: await adminApi.updateUserRole(userId, newRole);
       } catch (error) {
         console.error(`Failed to ${action} user`, error);
       }
     }
   };
 
+  const filteredUsers = users.filter(user => 
+    user.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
+          <p className="text-sm text-gray-500">Manage user accounts, roles, and access.</p>
+        </div>
+        
+        <div className="relative">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <Search size={18} className="text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search users..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="block w-full rounded-xl border border-gray-200 bg-white py-2 pl-10 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl bg-white shadow-sm border border-gray-200">
+      <div className="overflow-hidden rounded-2xl bg-white shadow-xl border border-gray-100">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
-                <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact</th>
-                <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Joined</th>
+                <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
+                <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Joined Date</th>
                 <th scope="col" className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center">
+                  <td colSpan="4" className="px-6 py-12 text-center">
                     <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-500" />
                   </td>
                 </tr>
-              ) : users.length === 0 ? (
+              ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
-                    No users found.
+                  <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
+                    No users found matching your search.
                   </td>
                 </tr>
               ) : (
-                users.map((user) => (
+                filteredUsers.map((user) => (
                   <tr key={user._id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
@@ -86,55 +112,54 @@ const UserManagement = () => {
                           {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900 flex items-center gap-1">
-                            {user.name}
-                            {user.isAdmin && <ShieldCheck size={14} className="text-blue-600 ml-1" title="Admin User" />}
-                          </div>
+                          <div className="font-medium text-gray-900">{user.name || 'Unknown User'}</div>
+                          <div className="text-sm text-gray-500">{user.email}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Mail size={14} className="text-gray-400" />
-                        {user.email}
-                      </div>
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {user.isBanned ? (
-                        <span className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10">
-                          Banned
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-                          Active
-                        </span>
-                      )}
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${
+                        user.role === 'admin' 
+                          ? 'bg-purple-50 text-purple-700 ring-purple-700/10' 
+                          : user.role === 'blocked'
+                          ? 'bg-red-50 text-red-700 ring-red-700/10'
+                          : 'bg-green-50 text-green-700 ring-green-700/10'
+                      }`}>
+                        {user.role === 'admin' && <Shield size={12} />}
+                        {user.role === 'admin' ? 'Admin' : user.role === 'blocked' ? 'Blocked' : 'User'}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Calendar size={14} className="text-gray-400" />
-                        {new Date(user.createdAt || Date.now()).toLocaleDateString()}
-                      </div>
+                      {new Date(user.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      {!user.isAdmin && (
-                        <>
+                      <div className="flex items-center justify-end gap-2">
+                        {user.role !== 'admin' && (
                           <button 
-                            onClick={() => toggleBanStatus(user._id, user.isBanned)}
-                            className={`${user.isBanned ? 'text-green-600 hover:text-green-900' : 'text-amber-600 hover:text-amber-900'} mr-4 transition-colors`}
-                            title={user.isBanned ? "Unban User" : "Ban User"}
+                            onClick={() => handleAction(user._id, 'promote')}
+                            className="rounded-lg p-2 text-purple-600 hover:bg-purple-50 transition-colors tooltip"
+                            title="Promote to Admin"
                           >
-                            <Ban size={18} />
+                            <Shield size={18} />
                           </button>
+                        )}
+                        {user.role !== 'blocked' && user.role !== 'admin' && (
                           <button 
-                            onClick={() => deleteUser(user._id)}
-                            className="text-red-600 hover:text-red-900 transition-colors"
-                            title="Delete User"
+                            onClick={() => handleAction(user._id, 'block')}
+                            className="rounded-lg p-2 text-orange-600 hover:bg-orange-50 transition-colors tooltip"
+                            title="Block User"
                           >
-                            <Trash2 size={18} />
+                            <ShieldAlert size={18} />
                           </button>
-                        </>
-                      )}
+                        )}
+                        <button 
+                          onClick={() => handleAction(user._id, 'delete')}
+                          className="rounded-lg p-2 text-red-600 hover:bg-red-50 transition-colors tooltip"
+                          title="Delete User"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

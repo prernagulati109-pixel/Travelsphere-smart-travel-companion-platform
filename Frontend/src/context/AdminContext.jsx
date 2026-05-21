@@ -17,10 +17,10 @@ export const AdminProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
         if (user) {
-          // Check if user is in 'admins' collection
-          const adminDoc = await getDoc(doc(db, 'admins', user.uid));
-          if (adminDoc.exists()) {
-            setCurrentAdmin({ uid: user.uid, email: user.email, ...adminDoc.data() });
+          // Check if user is in 'users' collection with role 'admin'
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists() && userDoc.data().role === 'admin') {
+            setCurrentAdmin({ uid: user.uid, email: user.email, ...userDoc.data() });
           } else {
             // If logged in via firebase but not an admin, sign out immediately
             await signOut(auth);
@@ -45,14 +45,14 @@ export const AdminProvider = ({ children }) => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
-      const adminDoc = await getDoc(doc(db, 'admins', user.uid));
-      if (!adminDoc.exists()) {
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (!userDoc.exists() || userDoc.data().role !== 'admin') {
         await signOut(auth);
         throw new Error('User is not an administrator.');
       }
       
       // Immediately set the current admin to avoid race conditions
-      setCurrentAdmin({ uid: user.uid, email: user.email, ...adminDoc.data() });
+      setCurrentAdmin({ uid: user.uid, email: user.email, ...userDoc.data() });
       
       return true;
     } catch (error) {

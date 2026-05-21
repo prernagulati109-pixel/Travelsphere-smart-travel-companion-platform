@@ -32,7 +32,7 @@ function AuthPage() {
       }
       
       if (user?.isAdmin) {
-        navigate('/dashboard');
+        navigate('/admin/dashboard');
       } else {
         navigate(from, { state: location.state, replace: true });
       }

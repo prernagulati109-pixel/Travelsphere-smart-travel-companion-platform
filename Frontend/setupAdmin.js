@@ -68,22 +68,22 @@ async function setupAdmin() {
   console.log("   Writing admin data to Firestore...");
 
   try {
-    await setDoc(doc(db, "admins", uid), {
-      adminId: uid,
+    await setDoc(doc(db, "users", uid), {
+      uid: uid,
       name: name,
       email: email,
-      role: "superadmin",
+      role: "admin",
       createdAt: new Date().toISOString(),
       lastLogin: null
     });
 
-    console.log("✅ Admin document saved to Firestore 'admins' collection.\n");
+    console.log("✅ Admin document saved to Firestore 'users' collection.\n");
     console.log("========================================");
     console.log("  🎉 ADMIN ACCOUNT READY!");
     console.log("========================================");
     console.log(`  Email:    ${email}`);
     console.log(`  Password: ${newPassword}`);
-    console.log(`  Role:     superadmin`);
+    console.log(`  Role:     admin`);
     console.log(`  UID:      ${uid}`);
     console.log("========================================");
     console.log("\nYou can now login at: http://localhost:5173/admin/login\n");

@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAdmin } from '../../context/AdminContext';
+import { useAuth } from '../../context/AuthContext';
 import { 
   LayoutDashboard, 
   Building2, 
-  BedDouble, 
   CalendarDays, 
   Users, 
-  CreditCard, 
   MessageSquare, 
-  Tag,
+  BarChart3,
   LogOut,
   Menu,
   X
@@ -17,23 +16,23 @@ import {
 
 const AdminLayout = () => {
   const { currentAdmin, logoutAdmin } = useAdmin();
+  const { logout } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = async () => {
     await logoutAdmin();
-    navigate('/admin/login');
+    await logout();
+    navigate('/');
   };
 
   const navItems = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Hotels', path: '/admin/hotels', icon: Building2 },
-    { name: 'Rooms', path: '/admin/rooms', icon: BedDouble },
-    { name: 'Bookings', path: '/admin/bookings', icon: CalendarDays },
     { name: 'Users', path: '/admin/users', icon: Users },
-    { name: 'Payments', path: '/admin/payments', icon: CreditCard },
-    { name: 'Reviews', path: '/admin/reviews', icon: MessageSquare },
-    { name: 'Offers', path: '/admin/offers', icon: Tag },
+    { name: 'Bookings', path: '/admin/bookings', icon: CalendarDays },
+    { name: 'Messages', path: '/admin/messages', icon: MessageSquare },
+    { name: 'Analytics', path: '/admin/analytics', icon: BarChart3 },
   ];
 
   return (

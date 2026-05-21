@@ -6,7 +6,8 @@ import {
   signOut
 } from "firebase/auth";
 
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const AuthContext = createContext({
   user: null,
@@ -48,25 +49,30 @@ export function AuthProvider({ children }) {
     password
   ) => {
 
-    const result =
-      await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    
+    // Check if user is an admin
+    let isAdmin = false;
+    let role = 'user';
+    try {
+      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+      if (userDoc.exists() && userDoc.data().role === 'admin') {
+        isAdmin = true;
+        role = 'admin';
+      }
+    } catch (err) {
+      console.error("Error fetching user role:", err);
+    }
 
     const u = {
-      email:
-      result.user.email
+      email: result.user.email,
+      uid: result.user.uid,
+      isAdmin,
+      role
     };
 
     setUser(u);
-
-    sessionStorage.setItem(
-      "travelsphere_user",
-      JSON.stringify(u)
-    );
-
+    sessionStorage.setItem("travelsphere_user", JSON.stringify(u));
     return u;
   };
 
@@ -80,26 +86,31 @@ export function AuthProvider({ children }) {
     password
   ) => {
 
-    const result =
-    await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+
+    // Save default user role in Firestore
+    try {
+      await setDoc(doc(db, 'users', result.user.uid), {
+        uid: result.user.uid,
+        name,
+        email: result.user.email,
+        role: 'user',
+        createdAt: new Date().toISOString()
+      });
+    } catch (err) {
+      console.error("Error saving user to Firestore:", err);
+    }
 
     const u = {
       name,
-      email:
-      result.user.email
+      email: result.user.email,
+      uid: result.user.uid,
+      isAdmin: false,
+      role: 'user'
     };
 
     setUser(u);
-
-    sessionStorage.setItem(
-      "travelsphere_user",
-      JSON.stringify(u)
-    );
-
+    sessionStorage.setItem("travelsphere_user", JSON.stringify(u));
     return u;
   };
 

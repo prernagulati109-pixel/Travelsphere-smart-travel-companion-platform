@@ -25,16 +25,18 @@ import AdminLayout from './components/admin/AdminLayout';
 import AdminLogin from './pages/admin/AdminLogin';
 import DashboardOverview from './pages/admin/DashboardOverview';
 import HotelManagement from './pages/admin/HotelManagement';
-import RoomManagement from './pages/admin/RoomManagement';
 import UserManagement from './pages/admin/UserManagement';
 import BookingManagement from './pages/admin/BookingManagement';
+import Analytics from './pages/admin/Analytics';
+import RoleGuard from './components/RoleGuard';
 
 function App() {
   return (
     <AdminProvider>
-      <Routes>
-        {/* User Routes */}
-        <Route path="/" element={<HomePage />} />
+      <RoleGuard>
+        <Routes>
+          {/* User Routes */}
+          <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/faq" element={<FAQPage />} />
@@ -60,12 +62,10 @@ function App() {
           <Route element={<AdminLayout />}>
             <Route path="dashboard" element={<DashboardOverview />} />
             <Route path="hotels" element={<HotelManagement />} />
-            <Route path="rooms" element={<RoomManagement />} />
-            <Route path="bookings" element={<BookingManagement />} />
             <Route path="users" element={<UserManagement />} />
-            <Route path="payments" element={<div className="p-8">Payments (Coming Soon)</div>} />
-            <Route path="reviews" element={<div className="p-8">Reviews (Coming Soon)</div>} />
-            <Route path="offers" element={<div className="p-8">Offers (Coming Soon)</div>} />
+            <Route path="bookings" element={<BookingManagement />} />
+            <Route path="messages" element={<div className="p-8">Messages (Coming Soon)</div>} />
+            <Route path="analytics" element={<Analytics />} />
           </Route>
         </Route>
       </Routes>
@@ -75,6 +75,7 @@ function App() {
         <Route path="/admin/*" element={null} />
         <Route path="*" element={<Chatbot />} />
       </Routes>
+      </RoleGuard>
     </AdminProvider>
   );
 }

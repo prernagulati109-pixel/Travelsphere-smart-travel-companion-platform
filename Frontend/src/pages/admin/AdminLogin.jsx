@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdmin } from '../../context/AdminContext';
-import { Lock, Mail, AlertCircle, ArrowRight } from 'lucide-react';
+import { Lock, Mail, AlertCircle, ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -71,13 +72,20 @@ const AdminLogin = () => {
                 <Lock size={18} />
               </div>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="block w-full rounded-xl border border-gray-600 bg-gray-800/50 py-3 pl-10 pr-3 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                className="block w-full rounded-xl border border-gray-600 bg-gray-800/50 py-3 pl-10 pr-10 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
                 placeholder="••••••••"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-white"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
 
@@ -87,8 +95,17 @@ const AdminLogin = () => {
             className="group relative flex w-full justify-center rounded-xl bg-blue-600 py-3 px-4 text-sm font-semibold text-white transition-all hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             <span className="flex items-center gap-2">
-              {loading ? 'Authenticating...' : 'Sign In'}
-              {!loading && <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />}
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Authenticating...
+                </>
+              ) : (
+                <>
+                  Sign In
+                  <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+                </>
+              )}
             </span>
           </button>
         </form>
