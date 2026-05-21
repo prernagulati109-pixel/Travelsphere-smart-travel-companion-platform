@@ -2,10 +2,10 @@
   "name": "travelsphere-final",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "backend/index.js",
   "scripts": {
-    "build": "cd Frontend && npm install && npm run build",
-    "start": "node server/server.js"
+    "build": "cd backend && npm install && cd ../Frontend && npm install && npm run build",
+    "start": "node backend/index.js"
   },
   "repository": {
     "type": "git",

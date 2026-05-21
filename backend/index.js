@@ -1,5 +1,7 @@
 import express from 'express';
 import dns from 'node:dns';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // Fix for MongoDB Atlas DNS SRV lookup issues on some networks
 dns.setServers(['8.8.8.8', '8.8.4.4']);
@@ -29,6 +31,8 @@ mongoose.connect(process.env.MONGODB_URI)
     console.log("----------------------------");
   });
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -41,6 +45,9 @@ console.log("PORT:", PORT);
 console.log("GEMINI_API_KEY:", process.env.GEMINI_API_KEY ? "Found (masked)" : "MISSING");
 console.log("----------------------------");
 
+// Serve frontend static assets
+const frontendBuildPath = path.join(__dirname, '../Frontend/dist');
+app.use(express.static(frontendBuildPath));
 
 // Routes
 app.use('/api/chatbot', chatbotRoutes);
@@ -50,8 +57,11 @@ app.use('/api/users', userRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/admin', adminRoutes);
 
-app.get('/', (req, res) => {
-  res.send('TravelSphere AI Backend is running');
+app.get('*', (req, res) => {
+  if (req.originalUrl.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API route not found' });
+  }
+  res.sendFile(path.join(frontendBuildPath, 'index.html'));
 });
 
 app.listen(PORT, () => {
