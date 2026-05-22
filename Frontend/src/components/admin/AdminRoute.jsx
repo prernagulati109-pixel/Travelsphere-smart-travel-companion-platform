@@ -13,7 +13,7 @@ const AdminRoute = () => {
     );
   }
 
-  return currentAdmin ? <Outlet /> : <Navigate to="/admin/login" replace />;
+  return currentAdmin ? <Outlet /> : <Navigate to="/" replace />;
 };
 
 export default AdminRoute;

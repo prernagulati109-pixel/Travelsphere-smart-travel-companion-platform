@@ -85,22 +85,10 @@ export function AuthProvider({ children }) {
     email,
     password
   ) => {
-
+    // Create auth user first
     const result = await createUserWithEmailAndPassword(auth, email, password);
 
-    // Save default user role in Firestore
-    try {
-      await setDoc(doc(db, 'users', result.user.uid), {
-        uid: result.user.uid,
-        name,
-        email: result.user.email,
-        role: 'user',
-        createdAt: new Date().toISOString()
-      });
-    } catch (err) {
-      console.error("Error saving user to Firestore:", err);
-    }
-
+    // Prepare user object and set it immediately so UI reflects logged-in state
     const u = {
       name,
       email: result.user.email,
@@ -111,6 +99,20 @@ export function AuthProvider({ children }) {
 
     setUser(u);
     sessionStorage.setItem("travelsphere_user", JSON.stringify(u));
+
+    // Save default user role in Firestore (best-effort). If it fails, log error but do not block user login.
+    try {
+      await setDoc(doc(db, 'users', result.user.uid), {
+        uid: result.user.uid,
+        name,
+        email: result.user.email,
+        role: 'user',
+        createdAt: new Date().toISOString()
+      });
+    } catch (err) {
+      console.error("Error saving user to Firestore (non-blocking):", err);
+    }
+
     return u;
   };
 

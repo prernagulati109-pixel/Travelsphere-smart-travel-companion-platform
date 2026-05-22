@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { fullPlaceData } from '../data/data';
 import { apiService } from '../services/apiService';
 import { pdfGenerator } from '../utils/pdfGenerator';
+import { useAuth } from '../context/AuthContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { CheckCircle2, RefreshCcw, Copy, CheckCheck } from 'lucide-react';
+
 
 // Itinerary templates per destination
 const itineraryTemplates = {
@@ -183,6 +186,14 @@ function PlanItineraryPage() {
   const [paymentStep, setPaymentStep] = useState('summary');
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [upiCopied, setUpiCopied] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const currentUser = JSON.parse(localStorage.getItem("user"));
+  const { isLoggedIn, setPendingAction } = useAuth();
+
+  // Fallback auth detection: some parts of the app may store user in sessionStorage/localStorage.
+  const authLoggedIn = Boolean(isLoggedIn || sessionStorage.getItem('travelsphere_user') || localStorage.getItem('user'));
 
   // Payment verification states
   const [paymentVerified, setPaymentVerified] = useState(false);
@@ -269,16 +280,37 @@ function PlanItineraryPage() {
     setExpandedDay(0);
   };
 
-  const handleDownloadPDF = () => {
-    if (itinerary) {
+ const handleDownloadPDF = () => {
+  if (!itinerary) return;
+
+  // If user is not logged in, set a pending action to generate the PDF
+  // after successful login and redirect the user to the auth page.
+  if (!authLoggedIn) {
+    // Store a callable pending action (function value) in auth context
+    setPendingAction(() => () => {
       pdfGenerator.generateItineraryPDF({
-        destination: searchedDest,
-        days,
+        destination: searchedDest || destination,
+        days: parseInt(days, 10),
         travelers,
         itinerary
       });
-    }
-  };
+    });
+
+    // Optional UX hint before redirecting
+    try { window.alert('Please login to download itinerary PDF'); } catch (e) {}
+
+    navigate('/auth', { state: { redirectTo: location.pathname, from: location.pathname } });
+    return;
+  }
+
+  // If already logged in, generate & download immediately
+  pdfGenerator.generateItineraryPDF({
+    destination: searchedDest || destination,
+    days: parseInt(days, 10),
+    travelers,
+    itinerary
+  });
+};
 
   const handleBookTrip = () => {
     setBookingLoading(true);

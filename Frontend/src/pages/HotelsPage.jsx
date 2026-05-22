@@ -32,6 +32,7 @@ function ChangeView({ center, zoom }) {
   return null;
 }
 import { useWishlist } from '../context/WishlistContext';
+import SearchAutocomplete from '../components/SearchAutocomplete';
 import '../styles/hotels.css';
 import '../styles/hotels-premium.css';
 
@@ -283,41 +284,18 @@ function HotelsPage() {
               <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-end">
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
                   <div className="relative group" onClick={(e) => e.stopPropagation()}>
-                    <SearchInput 
-                      label="Destination" 
-                      icon={<MapPin className="text-blue-500" size={18} />} 
-                      value={searchQuery} 
-                      onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        setShowSuggestions(true);
-                      }}
-                      onFocus={() => setShowSuggestions(true)}
-                    />
-                    <AnimatePresence>
-                      {showSuggestions && suggestions.length > 0 && (
-                        <motion.div 
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 10 }}
-                          className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50"
-                        >
-                          {suggestions.map(s => (
-                            <div 
-                              key={s} 
-                              className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSearchQuery(s);
-                                setShowSuggestions(false);
-                              }}
-                            >
-                              <MapPin size={14} className="text-slate-400" /> 
-                              <span className="text-slate-700 font-medium">{s}</span>
-                            </div>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Destination</label>
+                      <div className="relative flex items-center">
+                        <div className="absolute left-4 z-10"><MapPin className="text-blue-500" size={18} /></div>
+                        <SearchAutocomplete 
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder="Enter Destination..."
+                          inputClassName="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-slate-800 font-semibold placeholder:text-slate-400 placeholder:font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                        />
+                      </div>
+                    </div>
                   </div>
                   <SearchInput 
                     label="Check-in - Check-out" 

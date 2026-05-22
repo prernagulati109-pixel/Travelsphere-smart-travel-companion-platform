@@ -6,6 +6,7 @@ import { destinations as staticDestinations } from '../data/data';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useWishlist } from '../context/WishlistContext';
+import SearchAutocomplete from '../components/SearchAutocomplete';
 import '../styles/index.css';
 
 // Custom component to handle zoom from external buttons
@@ -86,9 +87,15 @@ function ExplorePlacesPage() {
         <div className="mockup-filter-bar">
           <div className="mockup-filter-group">
             <label>Where do you want to go?</label>
-            <div className="mockup-input-wrap">
-              <span className="icon">📍</span>
-              <input type="text" placeholder="Search destination..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+            <div className="mockup-input-wrap" style={{ position: 'relative' }}>
+              <span className="icon" style={{ zIndex: 10, position: 'relative' }}>📍</span>
+              <SearchAutocomplete
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search destination..."
+                inputClassName=""
+                className="explore-search-autocomplete"
+              />
             </div>
           </div>
           <div className="mockup-filter-group">

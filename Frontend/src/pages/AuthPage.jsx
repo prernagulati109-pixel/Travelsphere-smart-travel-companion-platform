@@ -48,43 +48,70 @@ function AuthPage() {
     }, 1500);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
 
-    if (!email.trim() || !password.trim()) {
-      setError('Please fill in all required fields.');
+  if (!email.trim() || !password.trim()) {
+    setError('Please fill in all required fields.');
+    return;
+  }
+
+  if (!isLogin && !name.trim()) {
+    setError('Please enter your full name.');
+    return;
+  }
+
+  if (!isLogin && password !== confirmPassword) {
+    setError('Passwords do not match.');
+    return;
+  }
+
+  if (!isLogin && password.length < 8) {
+    setError('Password must be at least 8 characters.');
+    return;
+  }
+
+  // Strong password enforcement for signup: min 8 chars, uppercase, lowercase, number, symbol
+  if (!isLogin) {
+    const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+    if (!strongRegex.test(password)) {
+      setError('Password must be at least 8 characters and include uppercase, lowercase, a number and a symbol.');
       return;
     }
+  }
 
-    if (!isLogin && !name.trim()) {
-      setError('Please enter your full name.');
-      return;
+  setIsSubmitting(true);
+
+  try {
+
+    if (isLogin) {
+      // Perform login and let the useEffect handle pendingAction and redirect
+      await login(email.trim(), password.trim());
+    } else {
+      // Perform registration (which sets user state); useEffect will handle redirect
+      await register(name.trim(), email.trim(), password.trim());
     }
 
-    if (!isLogin && password !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
+  } catch (err) {
 
-    if (!isLogin && password.length < 8) {
-      setError('Password must be at least 8 characters.');
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      if (isLogin) {
-        await login(email.trim(), password.trim());
-      } else {
-        await register(name.trim(), email.trim(), password.trim());
+    // Provide user-friendly messages for common Firebase errors
+    const msg = (err && err.code) ? (() => {
+      switch (err.code) {
+        case 'auth/email-already-in-use': return 'This email is already registered.';
+        case 'auth/invalid-email': return 'Please enter a valid email address.';
+        case 'auth/weak-password': return 'Password is too weak. Use at least 8 characters.';
+        case 'auth/network-request-failed': return 'Network error. Check your connection and try again.';
+        default: return err.message || 'Signup failed. Please try again.';
       }
-    } catch (err) {
-      setError(err.message);
-      setIsSubmitting(false);
-    }
-  };
+    })() : (err.message || 'Signup failed. Please try again.');
+
+    setError(msg);
+
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const handleGoogleContinue = async () => {
     setShowGoogleMock(false);

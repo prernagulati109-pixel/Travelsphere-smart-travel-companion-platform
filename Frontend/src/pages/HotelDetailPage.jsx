@@ -9,10 +9,13 @@ import {
   Download, ChevronRight, Info, Plane, Share2, Heart,
   Tv, Waves, Dumbbell, Utensils, Bath, Car, 
   Clock, Map as MapIcon, ChevronLeft, Award,
-  CheckCircle2, AlertCircle, TrendingUp
+  CheckCircle2, AlertCircle, TrendingUp,
+  SmartphoneNfc, Copy, CheckCheck, RefreshCcw, User, Mail, Phone, FileText
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useBooking } from '../context/BookingContext';
 import { allHotels } from '../data/data';
 import '../styles/index.css';
 import '../styles/hotel-details-booking.css';
@@ -124,10 +127,33 @@ function HotelDetailPage() {
   const [expandedRoom, setExpandedRoom] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [showBookingCard, setShowBookingCard] = useState(false);
+  
+  const [bookingStep, setBookingStep] = useState('room_selection');
+  const [guestDetails, setGuestDetails] = useState({ fullName: '', email: '', phone: '', requests: '' });
+  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [paymentVerified, setPaymentVerified] = useState(false);
+  const [verifyingPayment, setVerifyingPayment] = useState(false);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [isBooked, setIsBooked] = useState(false);
+  const [upiCopied, setUpiCopied] = useState(false);
+
+  const UPI_ID = 'gulatiprerna676@okaxis';
+  const UPI_NAME = 'TravelSphere';
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [hotelId]);
+
+  useEffect(() => {
+    if (paymentMethod === 'scanner' && !paymentVerified && !verifyingPayment) {
+      setVerifyingPayment(true);
+      const timer = setTimeout(() => {
+        setPaymentVerified(true);
+        setVerifyingPayment(false);
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [paymentMethod, paymentVerified, verifyingPayment]);
 
   // Find hotel from data or fallback to mock
   const foundHotel = allHotels.find(h => h.id === parseInt(hotelId));
@@ -163,29 +189,32 @@ function HotelDetailPage() {
   const roomExtraPrice = selectedRoom ? selectedRoom.price : 0;
   const totalAmount = (hotel.price + roomExtraPrice) * nights;
 
-  const handleReserve = () => {
-    const bookingDetails = {
-      hotelId,
-      hotelName: hotel.name,
-      roomName: selectedRoom?.name || 'Standard Room',
-      checkIn: bookingData.checkIn,
-      checkOut: bookingData.checkOut,
-      guests: bookingData.guests,
-      nights,
-      totalAmount,
-      price: hotel.price + roomExtraPrice
-    };
+  const isGuestDetailsValid = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^\d{10}$/;
+    return (
+      guestDetails.fullName.trim().length > 0 &&
+      emailRegex.test(guestDetails.email) &&
+      phoneRegex.test(guestDetails.phone)
+    );
+  };
 
-    if (!isLoggedIn) {
-      navigate('/auth', { 
-        state: { 
-          from: `/hotels/${hotelId}/payment`,
-          bookingDetails 
-        } 
-      });
-    } else {
-      navigate(`/hotels/${hotelId}/payment`, { state: { bookingDetails } });
+  const handleContinueToPayment = () => {
+    if (isGuestDetailsValid()) {
+      setBookingStep('payment');
+      setTimeout(() => {
+        const paymentEl = document.getElementById('payment-section');
+        if (paymentEl) paymentEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     }
+  };
+
+  const confirmBooking = () => {
+    setBookingLoading(true);
+    setTimeout(() => {
+      setIsBooked(true);
+      setBookingLoading(false);
+    }, 2000);
   };
 
   return (
@@ -474,9 +503,10 @@ function HotelDetailPage() {
                                 e.stopPropagation();
                                 setSelectedRoom(room);
                                 setShowBookingCard(true);
+                                setBookingStep('guest_details');
                                 setTimeout(() => {
-                                  const sidebar = document.querySelector('.hd-sticky-sidebar');
-                                  if (sidebar) sidebar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                  const guestForm = document.getElementById('guest-details-section');
+                                  if (guestForm) guestForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                 }, 100);
                               }}
                             >
@@ -490,6 +520,243 @@ function HotelDetailPage() {
                 })}
               </div>
             </section>
+
+            {bookingStep !== 'room_selection' && selectedRoom && (
+              <section className="hd-section" id="guest-details-section" style={{ animation: 'fadeIn 0.5s ease-in-out' }}>
+                <h2 className="hd-section-title">Guest Details</h2>
+                <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <div>
+                      <label style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <User size={16} color="#64748b" /> Full Name
+                      </label>
+                      <input 
+                        type="text" 
+                        value={guestDetails.fullName}
+                        onChange={e => setGuestDetails({...guestDetails, fullName: e.target.value})}
+                        placeholder="Enter your full name" 
+                        style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #cbd5e1', outline: 'none', transition: 'border-color 0.2s' }} 
+                        onFocus={e => e.target.style.borderColor = '#3b82f6'} 
+                        onBlur={e => e.target.style.borderColor = '#cbd5e1'} 
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Mail size={16} color="#64748b" /> Email Address
+                      </label>
+                      <input 
+                        type="email" 
+                        value={guestDetails.email}
+                        onChange={e => setGuestDetails({...guestDetails, email: e.target.value})}
+                        placeholder="your@email.com" 
+                        style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #cbd5e1', outline: 'none', transition: 'border-color 0.2s' }} 
+                        onFocus={e => e.target.style.borderColor = '#3b82f6'} 
+                        onBlur={e => e.target.style.borderColor = '#cbd5e1'} 
+                      />
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <div>
+                      <label style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Phone size={16} color="#64748b" /> Phone Number
+                      </label>
+                      <input 
+                        type="tel" 
+                        value={guestDetails.phone}
+                        onChange={e => setGuestDetails({...guestDetails, phone: e.target.value})}
+                        placeholder="10-digit mobile number" 
+                        style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #cbd5e1', outline: 'none', transition: 'border-color 0.2s' }} 
+                        onFocus={e => e.target.style.borderColor = '#3b82f6'} 
+                        onBlur={e => e.target.style.borderColor = '#cbd5e1'} 
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Users size={16} color="#64748b" /> Number of Guests
+                      </label>
+                      <input 
+                        type="number" 
+                        value={bookingData.guests}
+                        disabled
+                        style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #cbd5e1', background: '#f8fafc', color: '#64748b' }} 
+                      />
+                      <span style={{ fontSize: '12px', color: '#64748b', marginTop: '4px', display: 'block' }}>Change from sidebar</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <FileText size={16} color="#64748b" /> Special Requests (Optional)
+                    </label>
+                    <textarea 
+                      value={guestDetails.requests}
+                      onChange={e => setGuestDetails({...guestDetails, requests: e.target.value})}
+                      placeholder="E.g., early check-in, extra bed..." 
+                      rows={3}
+                      style={{ width: '100%', padding: '12px 16px', borderRadius: '10px', border: '1px solid #cbd5e1', outline: 'none', transition: 'border-color 0.2s', resize: 'vertical' }} 
+                      onFocus={e => e.target.style.borderColor = '#3b82f6'} 
+                      onBlur={e => e.target.style.borderColor = '#cbd5e1'} 
+                    />
+                  </div>
+                  
+                  {bookingStep === 'guest_details' && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+                      <button 
+                        onClick={handleContinueToPayment}
+                        disabled={!isGuestDetailsValid()}
+                        style={{
+                          padding: '14px 28px',
+                          background: isGuestDetailsValid() ? '#006ce4' : '#94a3b8',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '8px',
+                          fontWeight: '700',
+                          fontSize: '16px',
+                          cursor: isGuestDetailsValid() ? 'pointer' : 'not-allowed',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          transition: 'all 0.3s',
+                          opacity: isGuestDetailsValid() ? 1 : 0.7
+                        }}
+                      >
+                        Continue to Payment <ChevronRight size={18} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {bookingStep === 'payment' && selectedRoom && (
+              <section className="hd-section" id="payment-section" style={{ animation: 'fadeIn 0.5s ease-in-out' }}>
+                <h2 className="hd-section-title">Secure Payment</h2>
+                <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '24px' }}>
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: '#f1f5f9', padding: '4px', borderRadius: '10px' }}>
+                    <button
+                      onClick={() => setPaymentMethod('card')}
+                      style={{ flex: 1, padding: '10px', border: 'none', borderRadius: '7px', background: paymentMethod === 'card' ? 'white' : 'transparent', color: paymentMethod === 'card' ? '#0f172a' : '#64748b', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: paymentMethod === 'card' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}
+                    ><CreditCard size={18} /> Card</button>
+                    <button
+                      onClick={() => setPaymentMethod('scanner')}
+                      style={{ flex: 1, padding: '10px', border: 'none', borderRadius: '7px', background: paymentMethod === 'scanner' ? 'white' : 'transparent', color: paymentMethod === 'scanner' ? '#0f172a' : '#64748b', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: paymentMethod === 'scanner' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: 'all 0.2s' }}
+                    ><SmartphoneNfc size={18} /> UPI / QR</button>
+                  </div>
+
+                  {paymentMethod === 'card' ? (
+                    <div style={{ display: 'grid', gap: '16px', textAlign: 'left' }}>
+                      <div>
+                        <label style={{ fontSize: '0.85rem', color: '#475569', display: 'block', marginBottom: '6px', fontWeight: '500' }}>Cardholder Name</label>
+                        <input type="text" placeholder="John Doe" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', outline: 'none', transition: 'border-color 0.2s' }} onFocus={e => e.target.style.borderColor = '#3b82f6'} onBlur={e => e.target.style.borderColor = '#cbd5e1'} />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.85rem', color: '#475569', display: 'block', marginBottom: '6px', fontWeight: '500' }}>Card Number</label>
+                        <input type="text" placeholder="0000 0000 0000 0000" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', outline: 'none', transition: 'border-color 0.2s' }} onFocus={e => e.target.style.borderColor = '#3b82f6'} onBlur={e => e.target.style.borderColor = '#cbd5e1'} />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                        <div>
+                          <label style={{ fontSize: '0.85rem', color: '#475569', display: 'block', marginBottom: '6px', fontWeight: '500' }}>Expiry Date</label>
+                          <input type="text" placeholder="MM/YY" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', outline: 'none', transition: 'border-color 0.2s' }} onFocus={e => e.target.style.borderColor = '#3b82f6'} onBlur={e => e.target.style.borderColor = '#cbd5e1'} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '0.85rem', color: '#475569', display: 'block', marginBottom: '6px', fontWeight: '500' }}>CVV</label>
+                          <input type="password" placeholder="123" maxLength="4" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', outline: 'none', transition: 'border-color 0.2s' }} onFocus={e => e.target.style.borderColor = '#3b82f6'} onBlur={e => e.target.style.borderColor = '#cbd5e1'} />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', padding: '4px 0' }}>
+                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', textAlign: 'center' }}>
+                        Scan with any UPI app &nbsp;(GPay, PhonePe, Paytm…)
+                      </p>
+                      <div style={{
+                        background: 'white', border: '2px solid #e2e8f0', borderRadius: '20px', padding: '20px',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', width: '100%', maxWidth: '300px'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                          <div style={{
+                            width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#3b82f6)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '700', fontSize: '1rem'
+                          }}>T</div>
+                          <span style={{ fontWeight: '700', color: '#0f172a', fontSize: '0.95rem' }}>TravelSphere</span>
+                        </div>
+                        
+                        <div style={{ background: '#fff', padding: '10px', borderRadius: '8px' }}>
+                          <QRCodeSVG
+                            value={`upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_NAME)}&am=${totalAmount}&cu=INR&tn=${encodeURIComponent('Hotel Booking - TravelSphere')}`}
+                            size={180}
+                            level="H"
+                            includeMargin={false}
+                          />
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f8fafc', borderRadius: '8px', padding: '7px 14px', border: '1px solid #e2e8f0', width: '100%', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{ fontSize: '0.8rem', color: '#475569' }}>UPI ID:</span>
+                            <span style={{ fontSize: '0.82rem', fontWeight: '600', color: '#0f172a' }}>{UPI_ID}</span>
+                          </div>
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(UPI_ID); setUpiCopied(true); setTimeout(() => setUpiCopied(false), 2000); }}
+                            style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '2px', color: upiCopied ? '#10b981' : '#94a3b8', display: 'flex' }}
+                            title="Copy UPI ID"
+                          >
+                            {upiCopied ? <CheckCheck size={14} /> : <Copy size={14} />}
+                          </button>
+                        </div>
+
+                        <div style={{
+                          padding: '12px 16px', borderRadius: '12px', border: '1px solid', borderColor: paymentVerified ? '#bbf7d0' : '#bae6fd',
+                          background: paymentVerified ? '#f0fdf4' : '#f0f9ff', color: paymentVerified ? '#15803d' : '#0369a1',
+                          fontWeight: '600', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          gap: '10px', width: '100%', boxSizing: 'border-box', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', transition: 'all 0.3s'
+                        }}>
+                          {verifyingPayment ? (
+                            <>
+                              <RefreshCcw size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                              <div style={{ textAlign: 'left' }}>
+                                <span style={{ display: 'block', fontSize: '0.8rem', fontWeight: 'bold' }}>Waiting for payment...</span>
+                              </div>
+                            </>
+                          ) : paymentVerified ? (
+                            <>
+                              <CheckCircle2 size={18} />
+                              <div style={{ textAlign: 'left' }}>
+                                <span style={{ display: 'block', fontSize: '0.8rem', fontWeight: 'bold' }}>Payment Verified!</span>
+                              </div>
+                            </>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={confirmBooking}
+                    disabled={bookingLoading || (paymentMethod === 'scanner' && !paymentVerified)}
+                    style={{
+                      width: '100%', padding: '16px',
+                      background: paymentMethod === 'scanner'
+                        ? (paymentVerified ? 'linear-gradient(135deg,#10b981,#059669)' : '#94a3b8')
+                        : '#006ce4',
+                      color: 'white',
+                      border: 'none', borderRadius: '12px', fontWeight: '700', fontSize: '1rem',
+                      cursor: (bookingLoading || (paymentMethod === 'scanner' && !paymentVerified)) ? 'not-allowed' : 'pointer',
+                      marginTop: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                      transition: 'all 0.3s',
+                      opacity: (bookingLoading || (paymentMethod === 'scanner' && !paymentVerified)) ? 0.7 : 1,
+                      boxShadow: paymentMethod === 'scanner' && paymentVerified ? '0 4px 14px rgba(16,185,129,0.35)' : 'none',
+                    }}
+                  >
+                    {bookingLoading ? (
+                      <><RefreshCcw size={20} style={{ animation: 'spin 1s linear infinite' }} /> Processing...</>
+                    ) : paymentMethod === 'scanner' ? (
+                      <><CheckCircle2 size={20} /> I've Paid — Confirm Booking</>
+                    ) : (
+                      `Pay ₹${totalAmount?.toLocaleString()}`
+                    )}
+                  </button>
+                </div>
+              </section>
+            )}
 
             {/* 7. Reviews Section */}
             <section className="hd-section" id="reviews">
@@ -642,8 +909,42 @@ function HotelDetailPage() {
                   </div>
                 </div>
   
-                <button className="reserve-btn" onClick={handleReserve}>
-                  Reserve your spot
+                <button 
+                  className="reserve-btn" 
+                  onClick={() => {
+                    if (bookingStep === 'room_selection') {
+                      setBookingStep('guest_details');
+                      setTimeout(() => {
+                        const guestForm = document.getElementById('guest-details-section');
+                        if (guestForm) guestForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }, 100);
+                    } else if (bookingStep === 'guest_details') {
+                      handleContinueToPayment();
+                    } else if (bookingStep === 'payment') {
+                      confirmBooking();
+                    }
+                  }}
+                  disabled={
+                    (bookingStep === 'guest_details' && !isGuestDetailsValid()) ||
+                    (bookingStep === 'payment' && paymentMethod === 'scanner' && !paymentVerified) ||
+                    bookingLoading
+                  }
+                  style={{
+                    opacity: (
+                      (bookingStep === 'guest_details' && !isGuestDetailsValid()) ||
+                      (bookingStep === 'payment' && paymentMethod === 'scanner' && !paymentVerified) ||
+                      bookingLoading
+                    ) ? 0.7 : 1,
+                    cursor: (
+                      (bookingStep === 'guest_details' && !isGuestDetailsValid()) ||
+                      (bookingStep === 'payment' && paymentMethod === 'scanner' && !paymentVerified) ||
+                      bookingLoading
+                    ) ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {bookingStep === 'room_selection' ? 'Continue Booking' : 
+                   bookingStep === 'guest_details' ? 'Proceed to Payment' : 
+                   bookingLoading ? 'Processing...' : 'Confirm & Pay'}
                 </button>
   
                 <div className="booking-perks">
@@ -671,6 +972,9 @@ function HotelDetailPage() {
                   <AlertCircle size={14} style={{ marginRight: '8px', verticalAlign: 'middle', color: '#856404' }} />
                   Prices may increase, so book now!
                 </div>
+                <div style={{ color: '#d32f2f', fontWeight: 'bold', fontSize: '13px', marginTop: '12px', display: 'flex', alignItems: 'center' }}>
+                  <Clock size={14} style={{ marginRight: '6px' }}/> Only 3 rooms left on our site
+                </div>
               </div>
             )}
 
@@ -685,6 +989,60 @@ function HotelDetailPage() {
         </div>
       </div>
 
+      {isBooked && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 3000,
+          background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          display: 'grid', placeItems: 'center', padding: '20px'
+        }}>
+          <div style={{ background: 'white', padding: '40px', borderRadius: '24px', textAlign: 'center', maxWidth: '450px', width: '100%', animation: 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+            <div style={{ width: '80px', height: '80px', background: '#10b981', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', color: 'white' }}>
+              <CheckCircle2 size={40} />
+            </div>
+            <h3 style={{ fontSize: '24px', color: '#0f172a', marginBottom: '12px', marginTop: 0 }}>Booking Confirmed!</h3>
+            <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '12px', textAlign: 'left', marginBottom: '24px', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
+                <span style={{ color: '#64748b' }}>Booking ID</span>
+                <strong style={{ color: '#1e293b' }}>#TS{Math.floor(1000000 + Math.random() * 9000000)}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
+                <span style={{ color: '#64748b' }}>Hotel</span>
+                <strong style={{ color: '#1e293b' }}>{hotel.name}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
+                <span style={{ color: '#64748b' }}>Room</span>
+                <strong style={{ color: '#1e293b' }}>{selectedRoom?.name}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}>
+                <span style={{ color: '#64748b' }}>Dates</span>
+                <strong style={{ color: '#1e293b' }}>{bookingData.checkIn} to {bookingData.checkOut}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0', paddingTop: '8px', marginTop: '8px', fontSize: '14px' }}>
+                <span style={{ color: '#64748b' }}>Total Paid</span>
+                <strong style={{ color: '#10b981' }}>₹{totalAmount.toLocaleString()}</strong>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button style={{ flex: 1, padding: '12px', border: '1px solid #e2e8f0', background: 'white', borderRadius: '12px', color: '#0f172a', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer' }}>
+                <Download size={18} /> Invoice
+              </button>
+              <button 
+                onClick={() => navigate('/')}
+                style={{ flex: 1, padding: '12px', border: 'none', background: '#006ce4', borderRadius: '12px', color: 'white', fontWeight: '600', cursor: 'pointer' }}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+      `}</style>
       <Footer />
     </div>
   );

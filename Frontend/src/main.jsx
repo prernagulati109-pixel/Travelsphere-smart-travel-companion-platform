@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { BookingProvider } from './context/BookingContext';
 import './styles/index.css';
 import './styles/loaders.css';
 import './styles/theme.css';
@@ -17,7 +18,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <NotificationProvider>
           <AuthProvider>
             <WishlistProvider>
-              <App />
+              <BookingProvider>
+                <App />
+              </BookingProvider>
             </WishlistProvider>
           </AuthProvider>
         </NotificationProvider>

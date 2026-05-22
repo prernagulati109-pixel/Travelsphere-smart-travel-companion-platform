@@ -17,12 +17,12 @@ import FAQPage from './pages/FAQ';
 import TermsPage from './pages/Terms';
 import PrivacyPage from './pages/Privacy';
 import Chatbot from './components/chatbot/Chatbot';
+import BookingFlowManager from './components/booking/BookingFlowManager';
 
 // Admin Imports
 import { AdminProvider } from './context/AdminContext';
 import AdminRoute from './components/admin/AdminRoute';
 import AdminLayout from './components/admin/AdminLayout';
-import AdminLogin from './pages/admin/AdminLogin';
 import DashboardOverview from './pages/admin/DashboardOverview';
 import HotelManagement from './pages/admin/HotelManagement';
 import UserManagement from './pages/admin/UserManagement';
@@ -56,7 +56,7 @@ function App() {
         <Route path="/wishlist" element={<WishlistPage />} />
 
         {/* Admin Routes */}
-        <Route path="/admin/login" element={<AdminLogin />} />
+        {/* <Route path="/admin/login" element={<AdminLogin />} /> */}
         
         <Route path="/admin" element={<AdminRoute />}>
           <Route element={<AdminLayout />}>
@@ -75,6 +75,7 @@ function App() {
         <Route path="/admin/*" element={null} />
         <Route path="*" element={<Chatbot />} />
       </Routes>
+      <BookingFlowManager />
       </RoleGuard>
     </AdminProvider>
   );

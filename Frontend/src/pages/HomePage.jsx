@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { apiService } from '../services/apiService';
 import { destinations as staticDestinations, mapApiToDestination } from '../data/data';
+import SearchAutocomplete from '../components/SearchAutocomplete';
 
 const features = [
   { title: 'Explore Places', icon: '📍' },
@@ -170,11 +171,14 @@ function HomePage() {
             <h2>All your travel needs in one place.</h2>
             <p>Discover destinations, book hotels, and manage your itinerary with TravelSphere.</p>
             <div className="search-box">
-              <input
-                type="text"
-                placeholder="Search for destinations..."
+              <SearchAutocomplete
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                onSelect={(val) => {
+                  setSearch(val);
+                  navigate(`/explore?search=${encodeURIComponent(val)}`);
+                }}
+                placeholder="Search for destinations..."
               />
               <button onClick={() => {
                 navigate(`/explore?search=${encodeURIComponent(search)}`);

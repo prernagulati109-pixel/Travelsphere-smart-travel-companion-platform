@@ -1,0 +1,136 @@
+.search-autocomplete-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.search-autocomplete-input-wrapper {
+  width: 100%;
+}
+
+.search-autocomplete-input {
+  width: 100%;
+  padding: 20px 28px;
+  border: none;
+  outline: none;
+  border-radius: 50px;
+  background: #fff;
+  color: #222;
+  font-size: 18px;
+  font-weight: 500;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.search-autocomplete-input::placeholder {
+  color: #777;
+  opacity: 1;
+}
+
+.search-autocomplete-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(15, 43, 86, 0.15);
+  z-index: 1000;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.search-autocomplete-empty {
+  padding: 16px 20px;
+  color: #64748b;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.search-autocomplete-list {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+}
+
+.search-autocomplete-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.search-autocomplete-item:hover,
+.search-autocomplete-item.active {
+  background: rgba(29, 78, 216, 0.05);
+}
+
+.search-autocomplete-item-icon {
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-autocomplete-item-text {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: 1;
+}
+
+.search-autocomplete-item-text .text {
+  color: #1e293b;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.search-autocomplete-item-text .type {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  background: #f1f5f9;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.search-autocomplete-recent-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.search-autocomplete-recent-header button {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.search-autocomplete-recent-header button:hover {
+  background: #fef2f2;
+}
+
+.slide-down-anim {
+  animation: slideDownFade 0.2s ease-out;
+  transform-origin: top;
+}
+
+@keyframes slideDownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
