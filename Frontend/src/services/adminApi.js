@@ -1,6 +1,6 @@
 import { auth } from '../firebase';
 
-const BASE_URL = 'http://localhost:5000/api/admin';
+const BASE_URL = 'http://travelsphere-production.up.railway.app/api/admin';
 
 const getAuthHeaders = async () => {
   const user = auth.currentUser;

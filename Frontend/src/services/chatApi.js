@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://travelsphere-production.up.railway.app/api';
 const CHAT_API_URL = `${API_BASE_URL.replace(/\/$/, '')}/chat`;
 
 const handleResponse = async (response) => {

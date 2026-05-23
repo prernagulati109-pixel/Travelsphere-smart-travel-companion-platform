@@ -30,7 +30,7 @@ const ContactPage = () => {
 
     setLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/contact', formData);
+      await axios.post('http://travelsphere-production.up.railway.app/api/contact', formData);
       addNotification('Your message has been sent successfully!', 'success');
       setFormData({ name: '', email: '', subject: '', message: '' });
     } catch (error) {
