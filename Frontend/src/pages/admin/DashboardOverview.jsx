@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Building2, CalendarDays, DollarSign, MessageSquare, Loader2 } from 'lucide-react';
+import { Users, CalendarDays, Building2, Map, IndianRupee, MessageSquare, Loader2 } from 'lucide-react';
 import { adminApi } from '../../services/adminApi';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -27,6 +27,7 @@ const DashboardOverview = () => {
     totalUsers: 0,
     totalBookings: 0,
     totalHotels: 0,
+    totalPackages: 0,
     revenue: 0,
     contactMessages: 0
   });
@@ -68,6 +69,7 @@ const DashboardOverview = () => {
           totalUsers: 1254,
           totalBookings: 342,
           totalHotels: 45,
+          totalPackages: 14,
           revenue: 1250000,
           contactMessages: 15
         });
@@ -96,12 +98,13 @@ const DashboardOverview = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard title="Total Users" value={stats.totalUsers.toLocaleString()} icon={Users} gradient="from-blue-500 to-cyan-400" />
-        <StatCard title="Total Hotels" value={stats.totalHotels.toLocaleString()} icon={Building2} gradient="from-indigo-500 to-purple-400" />
-        <StatCard title="Total Bookings" value={stats.totalBookings.toLocaleString()} icon={CalendarDays} gradient="from-emerald-500 to-teal-400" />
-        <StatCard title="Revenue" value={`₹${stats.revenue.toLocaleString()}`} icon={DollarSign} gradient="from-amber-500 to-orange-400" />
-        <StatCard title="Messages" value={stats.contactMessages.toLocaleString()} icon={MessageSquare} gradient="from-rose-500 to-pink-400" />
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-6">
+        <StatCard title="Total Users" value={stats.totalUsers?.toLocaleString() || 0} icon={Users} gradient="from-blue-500 to-cyan-400" />
+        <StatCard title="Total Bookings" value={stats.totalBookings?.toLocaleString() || 0} icon={CalendarDays} gradient="from-emerald-500 to-teal-400" />
+        <StatCard title="Total Hotels" value={stats.totalHotels?.toLocaleString() || 0} icon={Building2} gradient="from-amber-500 to-orange-400" />
+        <StatCard title="Travel Packages" value={stats.totalPackages?.toLocaleString() || 0} icon={Map} gradient="from-indigo-500 to-purple-400" />
+        <StatCard title="Revenue" value={`₹${(stats.revenue || 0).toLocaleString()}`} icon={IndianRupee} gradient="from-purple-500 to-pink-400" />
+        <StatCard title="Messages" value={stats.contactMessages?.toLocaleString() || 0} icon={MessageSquare} gradient="from-rose-500 to-pink-400" />
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">

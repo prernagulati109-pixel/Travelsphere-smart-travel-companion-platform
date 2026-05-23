@@ -9,6 +9,7 @@ import {
   Users, 
   MessageSquare, 
   BarChart3,
+  Map,
   LogOut,
   Menu,
   X
@@ -31,6 +32,7 @@ const AdminLayout = () => {
     { name: 'Hotels', path: '/admin/hotels', icon: Building2 },
     { name: 'Users', path: '/admin/users', icon: Users },
     { name: 'Bookings', path: '/admin/bookings', icon: CalendarDays },
+    { name: 'Packages', path: '/admin/packages', icon: Map },
     { name: 'Messages', path: '/admin/messages', icon: MessageSquare },
     { name: 'Analytics', path: '/admin/analytics', icon: BarChart3 },
   ];

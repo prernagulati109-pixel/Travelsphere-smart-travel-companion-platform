@@ -98,6 +98,14 @@ export const adminApi = {
     });
     return res.json();
   },
+  updateUserRole: async (id, isAdmin) => {
+    const res = await fetch(`${BASE_URL}/users/${id}/role`, {
+      method: 'PUT',
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({ isAdmin })
+    });
+    return res.json();
+  },
 
   // Bookings
   getBookings: async () => {
@@ -109,6 +117,35 @@ export const adminApi = {
       method: 'PUT',
       headers: await getAuthHeaders(),
       body: JSON.stringify(statusData)
+    });
+    return res.json();
+  },
+
+  // Travel Packages
+  getPackages: async () => {
+    const res = await fetch(`${BASE_URL}/packages`, { headers: await getAuthHeaders() });
+    return res.json();
+  },
+  createPackage: async (data) => {
+    const res = await fetch(`${BASE_URL}/packages`, {
+      method: 'POST',
+      headers: await getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+  updatePackage: async (id, data) => {
+    const res = await fetch(`${BASE_URL}/packages/${id}`, {
+      method: 'PUT',
+      headers: await getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+  deletePackage: async (id) => {
+    const res = await fetch(`${BASE_URL}/packages/${id}`, {
+      method: 'DELETE',
+      headers: await getAuthHeaders()
     });
     return res.json();
   }

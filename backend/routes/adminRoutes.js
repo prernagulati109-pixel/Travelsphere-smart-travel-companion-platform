@@ -2,6 +2,7 @@ import express from 'express';
 import User from '../models/User.js';
 import Booking from '../models/Booking.js';
 import Hotel from '../models/Hotel.js';
+import TravelPackage from '../models/TravelPackage.js';
 import { verifyAdmin } from '../middleware/adminAuth.js';
 import admin from 'firebase-admin';
 
@@ -52,10 +53,18 @@ router.get('/stats', async (req, res) => {
     const totalUsers = await User.countDocuments();
     const totalBookings = await Booking.countDocuments();
     const totalHotels = await Hotel.countDocuments();
+    const totalPackages = await TravelPackage.countDocuments();
     
     // Calculate total revenue from bookings
     const bookings = await Booking.find();
-    const revenue = bookings.reduce((sum, booking) => sum + (Number(booking.totalPrice) || 0), 0);
+    const revenue = bookings.reduce((sum, booking) => {
+      // Only count revenue for confirmed/completed bookings if you prefer, or all. 
+      // The prompt asks to calculate revenue using Booking model.
+      if (booking.status !== 'cancelled' && booking.status !== 'rejected') {
+        return sum + (Number(booking.totalPrice) || 0);
+      }
+      return sum;
+    }, 0);
 
     res.json({
       success: true,
@@ -63,6 +72,7 @@ router.get('/stats', async (req, res) => {
         totalUsers,
         totalBookings,
         totalHotels,
+        totalPackages,
         revenue
       }
     });
@@ -187,6 +197,16 @@ router.put('/users/:id/ban', async (req, res) => {
   }
 });
 
+router.put('/users/:id/role', async (req, res) => {
+  try {
+    const { isAdmin } = req.body;
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, { isAdmin }, { new: true });
+    res.json({ success: true, data: updatedUser });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to update user role' });
+  }
+});
+
 // --- Booking Management ---
 router.get('/bookings', async (req, res) => {
   try {
@@ -203,6 +223,44 @@ router.put('/bookings/:id', async (req, res) => {
     res.json({ success: true, data: updatedBooking });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to update booking' });
+  }
+});
+
+// --- Travel Package Management ---
+router.get('/packages', async (req, res) => {
+  try {
+    const packages = await TravelPackage.find().sort({ createdAt: -1 });
+    res.json({ success: true, data: packages });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to fetch packages' });
+  }
+});
+
+router.post('/packages', async (req, res) => {
+  try {
+    const newPackage = new TravelPackage(req.body);
+    await newPackage.save();
+    res.status(201).json({ success: true, data: newPackage });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to create package' });
+  }
+});
+
+router.put('/packages/:id', async (req, res) => {
+  try {
+    const updatedPackage = await TravelPackage.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json({ success: true, data: updatedPackage });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to update package' });
+  }
+});
+
+router.delete('/packages/:id', async (req, res) => {
+  try {
+    await TravelPackage.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: 'Package deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to delete package' });
   }
 });
 

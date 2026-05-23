@@ -18,15 +18,12 @@ const BookingManagement = () => {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const data = await adminApi.getBookings(); // Adjust to your actual API call
+        const data = await adminApi.getBookings();
         if (data && data.success) {
           setBookings(data.data);
-        } else {
-          setBookings(mockBookings);
         }
       } catch (error) {
         console.error("Failed to fetch bookings", error);
-        setBookings(mockBookings);
       } finally {
         setLoading(false);
       }
@@ -37,21 +34,23 @@ const BookingManagement = () => {
   const handleStatusChange = async (bookingId, newStatus) => {
     if (window.confirm(`Are you sure you want to ${newStatus} this booking?`)) {
       try {
-        // Mocking action
-        setBookings(bookings.map(b => 
-          b._id === bookingId ? { ...b, status: newStatus } : b
-        ));
+        await adminApi.updateBooking(bookingId, { status: newStatus });
         
-        // Real API call here: await adminApi.updateBookingStatus(bookingId, newStatus);
+        // Refresh bookings
+        const data = await adminApi.getBookings();
+        if (data.success) {
+          setBookings(data.data);
+        }
       } catch (error) {
         console.error(`Failed to update booking status`, error);
+        alert(`Failed to update booking status`);
       }
     }
   };
 
   const filteredBookings = bookings.filter(booking => 
-    booking.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    booking.hotel?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    booking.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    booking.destination?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -105,15 +104,15 @@ const BookingManagement = () => {
                 filteredBookings.map((booking) => (
                   <tr key={booking._id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">{booking.user?.name}</div>
-                      <div className="text-sm text-gray-500">{booking.hotel?.name}</div>
+                      <div className="font-medium text-gray-900">{booking.customerName}</div>
+                      <div className="text-sm text-gray-500">{booking.destination}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div>In: {new Date(booking.checkIn).toLocaleDateString()}</div>
-                      <div>Out: {new Date(booking.checkOut).toLocaleDateString()}</div>
+                      <div>Date: {new Date(booking.travelDate).toLocaleDateString()}</div>
+                      {booking.travelers && <div>Travelers: {booking.travelers}</div>}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      ₹{booking.amount?.toLocaleString()}
+                      ₹{booking.totalPrice?.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -129,7 +128,7 @@ const BookingManagement = () => {
                         {booking.status === 'pending' && (
                           <>
                             <button 
-                              onClick={() => handleStatusChange(booking._id, 'approved')}
+                              onClick={() => handleStatusChange(booking._id, 'confirmed')}
                               className="rounded-lg p-2 text-green-600 hover:bg-green-50 tooltip" title="Approve"
                             >
                               <CheckCircle size={18} />
@@ -172,29 +171,29 @@ const BookingManagement = () => {
             <div className="space-y-4">
               <div>
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Guest Information</h3>
-                <p className="mt-1 font-medium text-gray-900">{selectedBooking.user?.name}</p>
-                <p className="text-sm text-gray-600">{selectedBooking.user?.email}</p>
+                <p className="mt-1 font-medium text-gray-900">{selectedBooking.customerName}</p>
+                <p className="text-sm text-gray-600">{selectedBooking.customerEmail}</p>
               </div>
               
               <div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Hotel Information</h3>
-                <p className="mt-1 font-medium text-gray-900">{selectedBooking.hotel?.name}</p>
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Destination/Hotel</h3>
+                <p className="mt-1 font-medium text-gray-900">{selectedBooking.destination}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Check-in</h3>
-                  <p className="mt-1 text-gray-900">{new Date(selectedBooking.checkIn).toLocaleDateString()}</p>
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Travel Date</h3>
+                  <p className="mt-1 text-gray-900">{new Date(selectedBooking.travelDate).toLocaleDateString()}</p>
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Check-out</h3>
-                  <p className="mt-1 text-gray-900">{new Date(selectedBooking.checkOut).toLocaleDateString()}</p>
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Travelers</h3>
+                  <p className="mt-1 text-gray-900">{selectedBooking.travelers || 1}</p>
                 </div>
               </div>
 
               <div>
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Total Amount</h3>
-                <p className="mt-1 text-xl font-bold text-gray-900">₹{selectedBooking.amount?.toLocaleString()}</p>
+                <p className="mt-1 text-xl font-bold text-gray-900">₹{selectedBooking.totalPrice?.toLocaleString()}</p>
               </div>
             </div>
 

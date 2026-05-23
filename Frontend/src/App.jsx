@@ -28,6 +28,8 @@ import HotelManagement from './pages/admin/HotelManagement';
 import UserManagement from './pages/admin/UserManagement';
 import BookingManagement from './pages/admin/BookingManagement';
 import Analytics from './pages/admin/Analytics';
+import PackageManagement from './pages/admin/PackageManagement';
+import AdminLogin from './pages/admin/AdminLogin';
 import RoleGuard from './components/RoleGuard';
 
 function App() {
@@ -56,7 +58,7 @@ function App() {
         <Route path="/wishlist" element={<WishlistPage />} />
 
         {/* Admin Routes */}
-        {/* <Route path="/admin/login" element={<AdminLogin />} /> */}
+        <Route path="/admin/login" element={<AdminLogin />} />
         
         <Route path="/admin" element={<AdminRoute />}>
           <Route element={<AdminLayout />}>
@@ -64,6 +66,7 @@ function App() {
             <Route path="hotels" element={<HotelManagement />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="bookings" element={<BookingManagement />} />
+            <Route path="packages" element={<PackageManagement />} />
             <Route path="messages" element={<div className="p-8">Messages (Coming Soon)</div>} />
             <Route path="analytics" element={<Analytics />} />
           </Route>

@@ -17,15 +17,12 @@ const UserManagement = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const data = await adminApi.getUsers(); // Adjust to your actual API call
+        const data = await adminApi.getUsers();
         if (data && data.success) {
           setUsers(data.data);
-        } else {
-          setUsers(mockUsers);
         }
       } catch (error) {
         console.error("Failed to fetch users", error);
-        setUsers(mockUsers);
       } finally {
         setLoading(false);
       }
@@ -36,18 +33,24 @@ const UserManagement = () => {
   const handleAction = async (userId, action) => {
     if (window.confirm(`Are you sure you want to ${action} this user?`)) {
       try {
-        // Mocking action for now
-        setUsers(users.map(u => {
-          if (u._id === userId) {
-            if (action === 'promote') return { ...u, role: 'admin' };
-            if (action === 'block') return { ...u, role: 'blocked' };
-          }
-          return u;
-        }).filter(u => action === 'delete' ? u._id !== userId : true));
+        if (action === 'promote') {
+          await adminApi.updateUserRole(userId, true);
+        } else if (action === 'block') {
+          await adminApi.banUser(userId, true);
+        } else if (action === 'unblock') {
+          await adminApi.banUser(userId, false);
+        } else if (action === 'delete') {
+          await adminApi.deleteUser(userId);
+        }
         
-        // Real API call here: await adminApi.updateUserRole(userId, newRole);
+        // Refresh users
+        const data = await adminApi.getUsers();
+        if (data.success) {
+          setUsers(data.data);
+        }
       } catch (error) {
         console.error(`Failed to ${action} user`, error);
+        alert(`Failed to ${action} user. Please try again.`);
       }
     }
   };
@@ -119,14 +122,14 @@ const UserManagement = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${
-                        user.role === 'admin' 
+                        user.isAdmin 
                           ? 'bg-purple-50 text-purple-700 ring-purple-700/10' 
-                          : user.role === 'blocked'
+                          : user.isBanned
                           ? 'bg-red-50 text-red-700 ring-red-700/10'
                           : 'bg-green-50 text-green-700 ring-green-700/10'
                       }`}>
-                        {user.role === 'admin' && <Shield size={12} />}
-                        {user.role === 'admin' ? 'Admin' : user.role === 'blocked' ? 'Blocked' : 'User'}
+                        {user.isAdmin && <Shield size={12} />}
+                        {user.isAdmin ? 'Admin' : user.isBanned ? 'Blocked' : 'User'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -134,7 +137,7 @@ const UserManagement = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">
-                        {user.role !== 'admin' && (
+                        {!user.isAdmin && (
                           <button 
                             onClick={() => handleAction(user._id, 'promote')}
                             className="rounded-lg p-2 text-purple-600 hover:bg-purple-50 transition-colors tooltip"
@@ -143,13 +146,22 @@ const UserManagement = () => {
                             <Shield size={18} />
                           </button>
                         )}
-                        {user.role !== 'blocked' && user.role !== 'admin' && (
+                        {!user.isBanned && !user.isAdmin && (
                           <button 
                             onClick={() => handleAction(user._id, 'block')}
                             className="rounded-lg p-2 text-orange-600 hover:bg-orange-50 transition-colors tooltip"
                             title="Block User"
                           >
                             <ShieldAlert size={18} />
+                          </button>
+                        )}
+                        {user.isBanned && !user.isAdmin && (
+                          <button 
+                            onClick={() => handleAction(user._id, 'unblock')}
+                            className="rounded-lg p-2 text-green-600 hover:bg-green-50 transition-colors tooltip"
+                            title="Unblock User"
+                          >
+                            <Shield size={18} />
                           </button>
                         )}
                         <button 

@@ -36,9 +36,9 @@ export const verifyAdmin = async (req, res, next) => {
     
     try {
       const db = admin.firestore();
-      const adminDoc = await db.collection('admins').doc(decodedToken.uid).get();
+      const adminDoc = await db.collection('users').doc(decodedToken.uid).get();
       
-      if (!adminDoc.exists) {
+      if (!adminDoc.exists || adminDoc.data().role !== 'admin') {
         return res.status(403).json({ success: false, error: 'Forbidden: Admin access required' });
       }
       

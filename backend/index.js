@@ -50,6 +50,7 @@ const frontendBuildPath = path.join(__dirname, '../Frontend/dist');
 app.use(express.static(frontendBuildPath));
 
 // Routes
+app.use('/api/chat', chatbotRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/bookings', bookingRoutes);

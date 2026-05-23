@@ -1,82 +1,116 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RiRobot2Fill } from 'react-icons/ri';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { getHistory, sendMessage } from '../../services/chatApi';
 import ChatWindow from './ChatWindow';
 import './chatbot.css';
 
-const API_URL = 'http://localhost:5000/api/chatbot';
+const CHAT_SESSION_KEY = 'travelsphere_chat_session_id';
+const WELCOME_MESSAGE = {
+  role: 'assistant',
+  content: 'Hello 👋\nI’m TravelSphere AI Assistant.\nI can help you find hotels, plan trips, and suggest destinations.',
+};
+
+const createSessionId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return `guest-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
+
+const getStoredSessionId = () => {
+  const existing = localStorage.getItem(CHAT_SESSION_KEY);
+  if (existing) return existing;
+
+  const nextSessionId = createSessionId();
+  localStorage.setItem(CHAT_SESSION_KEY, nextSessionId);
+  return nextSessionId;
+};
+
+const normalizeHistory = (history = []) => {
+  const messages = history
+    .filter((message) => message?.role && message?.content)
+    .map((message) => ({
+      role: message.role,
+      content: message.content,
+      timestamp: message.timestamp
+    }));
+
+  return messages.length ? messages : [WELCOME_MESSAGE];
+};
 
 const Chatbot = () => {
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      role: 'assistant',
-      content: 'Hello 👋\nI’m TravelSphere AI Assistant.\nI can help you find hotels, plan trips, and suggest destinations.',
-    },
-  ]);
+  const [messages, setMessages] = useState([WELCOME_MESSAGE]);
+  const [sessionId, setSessionId] = useState(() => getStoredSessionId());
+
+  const identity = useMemo(() => ({
+    sessionId,
+    userId: user?.uid || user?.id || null,
+    userEmail: user?.email || null
+  }), [sessionId, user]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadHistory = async () => {
+      try {
+        const history = await getHistory(identity);
+        if (!isMounted) return;
+
+        if (history.sessionId && history.sessionId !== sessionId) {
+          localStorage.setItem(CHAT_SESSION_KEY, history.sessionId);
+          setSessionId(history.sessionId);
+        }
+
+        setMessages(normalizeHistory(history.messages));
+      } catch (error) {
+        console.error('Failed to load chat history:', error);
+      }
+    };
+
+    loadHistory();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [identity.userId, identity.userEmail, identity.sessionId]);
 
   const handleSendMessage = async (text) => {
-    const userMessage = { role: 'user', content: text };
-    const newMessages = [...messages, userMessage];
-    setMessages(newMessages);
+    const cleanText = text.trim();
+    if (!cleanText || isLoading) return;
+
+    const userMessage = { role: 'user', content: cleanText };
+    const nextMessages = [...messages, userMessage];
+    setMessages(nextMessages);
     setIsLoading(true);
 
-    // Simple keyword detection for triggering filters
-    const lowerText = text.toLowerCase();
-    if (lowerText.includes('pool')) {
-      navigate('/hotels?amenity=Pool');
-    } else if (lowerText.includes('budget')) {
-      navigate('/hotels?maxPrice=5000');
-    } else if (lowerText.includes('luxury')) {
-      navigate('/hotels?minRating=5&maxPrice=150000');
-    } else if (lowerText.includes('deals') || lowerText.includes('offer')) {
-      navigate('/hotels?deals=true');
-    } else if (lowerText.includes('hotels in')) {
-      const match = lowerText.match(/hotels in ([a-z\s]+)/);
-      if (match && match[1]) {
-        navigate(`/hotels?search=${encodeURIComponent(match[1].trim())}`);
-      }
-    }
-
     try {
-      console.log('Sending messages to backend:', newMessages);
-      
-      const response = await fetch(`${API_URL}/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: newMessages,
-        }),
+      const data = await sendMessage({
+        ...identity,
+        message: cleanText,
+        messages
       });
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+      if (data.sessionId && data.sessionId !== sessionId) {
+        localStorage.setItem(CHAT_SESSION_KEY, data.sessionId);
+        setSessionId(data.sessionId);
       }
 
-      const data = await response.json();
-      console.log('Response data from backend:', data);
+      const reply = data.reply || data.message;
+      if (!reply) throw new Error('No assistant reply returned');
 
-      const reply = data.reply;
-      console.log('AI Reply:', reply);
-
-      if (reply) {
-        const botMessage = { role: 'assistant', content: reply };
-        setMessages((prev) => [...prev, botMessage]);
-      } else {
-        throw new Error('No reply in response data');
-      }
+      setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
     } catch (error) {
-      console.error('Error sending message:', error);
-      const errorMessage = {
-        role: 'assistant',
-        content: "I'm sorry, I'm having trouble connecting to the server. Please make sure the backend is running and your API key is valid.",
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      console.error('Error sending chat message:', error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
