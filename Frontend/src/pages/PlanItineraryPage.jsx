@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { fullPlaceData } from '../data/data';
@@ -7,6 +7,8 @@ import { pdfGenerator } from '../utils/pdfGenerator';
 import { useAuth } from '../context/AuthContext';
 import { QRCodeSVG } from 'qrcode.react';
 import { CheckCircle2, RefreshCcw, Copy, CheckCheck } from 'lucide-react';
+import SearchAutocomplete from '../components/SearchAutocomplete';
+import { SEARCH_TYPES } from '../utils/searchCatalog';
 
 
 // Itinerary templates per destination
@@ -204,6 +206,30 @@ function PlanItineraryPage() {
   const UPI_NAME = 'TravelSphere';
   const tripTotal = parseInt(days) * 5000;
 
+  const itinerarySearchItems = useMemo(() => [
+    ...Object.keys(itineraryTemplates).map((name) => ({
+      type: SEARCH_TYPES.destination,
+      text: name,
+      keywords: itineraryTemplates[name].flatMap(day => [
+        day.title,
+        ...day.activities.flatMap(activity => [activity.title, activity.description])
+      ])
+    })),
+    ...Object.keys(fullPlaceData || {}).map((name) => ({
+      type: SEARCH_TYPES.destination,
+      text: name,
+      keywords: [
+        fullPlaceData[name]?.description,
+        ...(fullPlaceData[name]?.highlights || []),
+        ...(fullPlaceData[name]?.attractions || []).map(item => item.name)
+      ].filter(Boolean)
+    })),
+    { type: SEARCH_TYPES.itinerary, text: 'Family itinerary', keywords: ['family', 'kids', 'safe plan'] },
+    { type: SEARCH_TYPES.itinerary, text: 'Couple itinerary', keywords: ['honeymoon', 'romantic', 'date'] },
+    { type: SEARCH_TYPES.activity, text: 'Food tour itinerary', keywords: ['restaurants', 'local cuisine', 'street food'] },
+    { type: SEARCH_TYPES.transport, text: 'Airport transfer plan', keywords: ['airport', 'cab', 'arrival'] }
+  ], []);
+
   // Automatic mock payment verification on UPI tab click
   useEffect(() => {
     if (paymentMethod === 'scanner' && !paymentVerified && !verifyingPayment) {
@@ -216,15 +242,16 @@ function PlanItineraryPage() {
     }
   }, [paymentMethod, paymentVerified, verifyingPayment]);
 
-  const handleCreate = async () => {
-    if (!destination.trim()) return;
+  const handleCreate = async (destinationOverride) => {
+    const selectedDestination = (destinationOverride || destination).trim();
+    if (!selectedDestination) return;
     setIsCreating(true);
 
     const numDays = parseInt(days, 10);
     let realAttractions = [];
     
     // Fetch real-time attractions for the destination
-    const locationResults = await apiService.searchLocations(destination);
+    const locationResults = await apiService.searchLocations(selectedDestination);
     if (locationResults && locationResults.length > 0) {
       const attractions = await apiService.getAttractions(locationResults[0].locationId);
       if (attractions) {
@@ -234,7 +261,7 @@ function PlanItineraryPage() {
 
     // Find matching template (case-insensitive)
     const matchKey = Object.keys(itineraryTemplates).find(
-      k => k.toLowerCase() === destination.trim().toLowerCase()
+      k => k.toLowerCase() === selectedDestination.toLowerCase()
     );
 
     let result;
@@ -249,7 +276,7 @@ function PlanItineraryPage() {
       }
     } else {
       // Capitalize
-      const capitalDest = destination.trim().charAt(0).toUpperCase() + destination.trim().slice(1).toLowerCase();
+      const capitalDest = selectedDestination.charAt(0).toUpperCase() + selectedDestination.slice(1).toLowerCase();
       result = generateGenericItinerary(capitalDest, numDays, travelers);
     }
 
@@ -275,7 +302,8 @@ function PlanItineraryPage() {
     }
 
     setItinerary(result);
-    setSearchedDest(destination.trim());
+    setDestination(selectedDestination);
+    setSearchedDest(selectedDestination);
     setIsCreating(false);
     setExpandedDay(0);
   };
@@ -340,12 +368,16 @@ function PlanItineraryPage() {
           <div className="nav-field">
             <label>Where to?</label>
             <div className="input-wrapper">
-              <input
-                type="text"
-                placeholder="Destination"
+              <SearchAutocomplete
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+                onSelect={setDestination}
+                placeholder="Destination"
+                inputClassName=""
+                className="itinerary-search-autocomplete"
+                items={itinerarySearchItems}
+                storageKey="travelsphere_itinerary_recent_searches"
+                onSubmitSearch={handleCreate}
               />
             </div>
           </div>
@@ -374,7 +406,7 @@ function PlanItineraryPage() {
           </div>
           <button
             className={`create-itinerary-btn ${isCreating ? 'loading' : ''}`}
-            onClick={handleCreate}
+            onClick={() => handleCreate()}
             disabled={isCreating}
           >
             <span className="icon">{isCreating ? '⏳' : '📝'}</span>

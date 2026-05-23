@@ -45,6 +45,19 @@ export default function BookingSummaryStep() {
           </div>
         )}
 
+        {(item?.destination || item?.departureDate || item?.travelers) && (
+          <div className="mb-4">
+            <h5 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-2">Destination Summary</h5>
+            {item?.fromCity && item?.destination && (
+              <p className="text-sm text-slate-700 font-medium m-0">{item.fromCity} → {item.destination}</p>
+            )}
+            {item?.departureDate && (
+              <p className="text-xs text-slate-500 m-0">Departure: {new Date(item.departureDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+            )}
+            <p className="text-xs text-slate-500 m-0">Travelers: {item?.travelers || 1}</p>
+          </div>
+        )}
+
         {seatSelection && seatSelection.length > 0 && (
           <div className="mb-4">
             <h5 className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-2">Seat Details</h5>

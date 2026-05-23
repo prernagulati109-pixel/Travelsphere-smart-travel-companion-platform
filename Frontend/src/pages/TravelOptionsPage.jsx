@@ -1,5 +1,5 @@
 import { useRef, useState, useMemo, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { apiService } from '../services/apiService';
 import { QRCodeSVG } from 'qrcode.react';
@@ -10,6 +10,7 @@ import {
   Trash2, Plus, Minus, Copy, CheckCheck
 } from 'lucide-react';
 import { useBooking } from '../context/BookingContext';
+import { useAuth } from '../context/AuthContext';
 
 // All flights data
 const flightsData = [
@@ -94,7 +95,9 @@ const travelSummary = [
 
 function TravelOptionsPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const dateInputRef = useRef(null);
+  const processedBookingIntent = useRef(false);
   const [selectedDate, setSelectedDate] = useState('');
   const [fromCity, setFromCity] = useState('');
   const [toCity, setToCity] = useState('');
@@ -108,6 +111,8 @@ function TravelOptionsPage() {
   const [apiTours, setApiTours] = useState([]);
   const [loading, setLoading] = useState(false);
   const { startBooking } = useBooking();
+  const { isLoggedIn } = useAuth();
+  const [travelValidationError, setTravelValidationError] = useState('');
 
   // Handle hotel booking context
   const mapServiceToMode = (service) => {
@@ -165,6 +170,19 @@ function TravelOptionsPage() {
     }
   }, [location.state]);
 
+  useEffect(() => {
+    if (isLoggedIn && location.state?.bookingIntent && !processedBookingIntent.current) {
+      processedBookingIntent.current = true;
+      startBooking(location.state.bookingIntent.flowType, location.state.bookingIntent.item);
+      navigate(location.pathname + location.search, {
+        replace: true,
+        state: { ...location.state, bookingIntent: null }
+      });
+    } else if (!location.state?.bookingIntent) {
+      processedBookingIntent.current = false;
+    }
+  }, [isLoggedIn, location.pathname, location.search, location.state, navigate, startBooking]);
+
   const openCalendar = () => {
     if (dateInputRef.current) {
       if ('showPicker' in HTMLInputElement.prototype) {
@@ -177,9 +195,12 @@ function TravelOptionsPage() {
 
   const handleSearch = () => {
     if (fromCity.trim() && toCity.trim()) {
+      setTravelValidationError('');
       setHasSearched(true);
       setActiveMode(null);
       setSelectedOption(null);
+    } else {
+      setTravelValidationError('Please enter both origin and destination before searching.');
     }
   };
 
@@ -217,7 +238,35 @@ function TravelOptionsPage() {
   };
   
   const handleBookNow = (item) => {
-    startBooking(activeMode, item);
+    if (!toCity.trim() || !selectedDate) {
+      setTravelValidationError('Please select a destination and departure date before booking.');
+      return;
+    }
+
+    const bookingItem = {
+      ...item,
+      fromCity: fromCity.trim(),
+      destination: toCity.trim(),
+      departureDate: selectedDate,
+      travelers: item.travelers || 1
+    };
+
+    if (!isLoggedIn) {
+      navigate('/auth', {
+        state: {
+          from: location.pathname + location.search,
+          bookingIntent: {
+            flowType: activeMode,
+            item: bookingItem
+          },
+          fromHotelBooking: location.state?.fromHotelBooking
+        }
+      });
+      return;
+    }
+
+    setTravelValidationError('');
+    startBooking(activeMode, bookingItem);
   };
 
   const getDistanceKm = (lat1, lon1, lat2, lon2) => {
@@ -309,6 +358,11 @@ function TravelOptionsPage() {
             <span className="chevron">∨</span>
           </button>
         </div>
+        {travelValidationError && !activeMode && (
+          <div className="auth-error" style={{ marginTop: '12px' }}>
+            {travelValidationError}
+          </div>
+        )}
 
         {/* Before Search — Prompt */}
         {!hasSearched && (
@@ -395,6 +449,11 @@ function TravelOptionsPage() {
             {/* Detail View */}
             {activeMode && (
               <section className="to-detail-section slide-down-animation">
+                {travelValidationError && (
+                  <div className="auth-error" style={{ marginBottom: '16px' }}>
+                    {travelValidationError}
+                  </div>
+                )}
                 <div className="to-detail-header">
                   <div className="to-detail-title">
                     <h2>{modeIcon} Available {modeLabel} {loading && <span className="loader-inline">...</span>}</h2>

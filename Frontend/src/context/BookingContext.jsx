@@ -27,6 +27,8 @@ export const BookingProvider = ({ children }) => {
       addOns: {},
       guestDetails: {},
       paymentMethod: null,
+      paymentVerified: false,
+      validationErrors: {},
       summary: {}
     };
   });
@@ -49,6 +51,8 @@ export const BookingProvider = ({ children }) => {
       addOns: {},
       guestDetails: {},
       paymentMethod: null,
+      paymentVerified: false,
+      validationErrors: {},
       summary: {}
     }));
   };
@@ -70,13 +74,29 @@ export const BookingProvider = ({ children }) => {
     setBookingState(prev => ({ ...prev, [key]: data }));
   };
 
+  const setValidationErrors = (errors) => {
+    setBookingState(prev => ({ ...prev, validationErrors: errors }));
+  };
+
+  const clearValidationError = (key) => {
+    setBookingState(prev => ({
+      ...prev,
+      validationErrors: {
+        ...(prev.validationErrors || {}),
+        [key]: null
+      }
+    }));
+  };
+
   return (
     <BookingContext.Provider value={{ 
       bookingState, 
       startBooking, 
       closeBooking, 
       setStep, 
-      updateData 
+      updateData,
+      setValidationErrors,
+      clearValidationError
     }}>
       {children}
     </BookingContext.Provider>

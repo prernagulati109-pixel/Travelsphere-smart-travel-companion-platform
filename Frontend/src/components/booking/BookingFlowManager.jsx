@@ -10,7 +10,7 @@ import ConfirmationStep from './ConfirmationStep';
 import '../../styles/BookingFlows.css';
 
 export default function BookingFlowManager() {
-  const { bookingState, closeBooking, setStep } = useBooking();
+  const { bookingState, closeBooking, setStep, setValidationErrors } = useBooking();
   const { isOpen, flowType, currentStep } = bookingState;
 
   // Determine flow sequence based on flowType
@@ -54,7 +54,63 @@ export default function BookingFlowManager() {
   const isLastStep = currentStep === steps.length - 1;
   const isConfirmation = currentStepData?.id === 'confirmation';
 
+  const validateCurrentStep = () => {
+    const errors = {};
+    const passengerDetails = bookingState.passengerDetails || {};
+    const item = bookingState.item || {};
+
+    if (currentStepData?.id === 'passenger') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const phoneDigits = (passengerDetails.phone || '').replace(/\D/g, '');
+
+      if (!passengerDetails.fullName?.trim()) errors.fullName = 'Full name is required.';
+      if (!emailRegex.test(passengerDetails.email || '')) errors.email = 'Enter a valid email address.';
+      if (phoneDigits.length !== 10) errors.phone = 'Enter a valid 10-digit phone number.';
+      if (!item.destination?.trim()) errors.destination = 'Travel destination is required.';
+      if (!item.departureDate) errors.departureDate = 'Departure date is required.';
+      if (!Number(item.travelers || 1)) errors.travelers = 'Number of travelers is required.';
+    }
+
+    if ((currentStepData?.id === 'seat') && (flowType === 'Flight' || flowType === 'Bus')) {
+      if (!bookingState.seatSelection?.length) errors.seatSelection = 'Please select a seat to continue.';
+    }
+
+    if (currentStepData?.id === 'payment') {
+      if (!bookingState.paymentMethod) errors.paymentMethod = 'Select a payment method.';
+      if (bookingState.paymentMethod === 'scanner' && !bookingState.paymentVerified) {
+        errors.paymentMethod = 'Please complete UPI verification before confirming.';
+      }
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const isCurrentStepValid = () => {
+    const passengerDetails = bookingState.passengerDetails || {};
+    const item = bookingState.item || {};
+    if (currentStepData?.id === 'passenger') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return Boolean(
+        passengerDetails.fullName?.trim() &&
+        emailRegex.test(passengerDetails.email || '') &&
+        (passengerDetails.phone || '').replace(/\D/g, '').length === 10 &&
+        item.destination?.trim() &&
+        item.departureDate &&
+        Number(item.travelers || 1)
+      );
+    }
+    if ((currentStepData?.id === 'seat') && (flowType === 'Flight' || flowType === 'Bus')) {
+      return Boolean(bookingState.seatSelection?.length);
+    }
+    if (currentStepData?.id === 'payment') {
+      return bookingState.paymentMethod === 'scanner' ? bookingState.paymentVerified : Boolean(bookingState.paymentMethod);
+    }
+    return true;
+  };
+
   const handleNext = () => {
+    if (!validateCurrentStep()) return;
     if (!isLastStep) setStep(currentStep + 1);
   };
 
@@ -109,6 +165,7 @@ export default function BookingFlowManager() {
             <button 
               className="btn-next" 
               onClick={handleNext}
+              disabled={!isCurrentStepValid()}
             >
               {currentStepData?.id === 'payment' ? 'Pay Now' : 'Continue'} <ArrowRight size={18} />
             </button>

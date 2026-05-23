@@ -7,6 +7,7 @@ import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useWishlist } from '../context/WishlistContext';
 import SearchAutocomplete from '../components/SearchAutocomplete';
+import { buildDestinationSearchItems, filterBySearch } from '../utils/searchCatalog';
 import '../styles/index.css';
 
 // Custom component to handle zoom from external buttons
@@ -59,6 +60,9 @@ function ExplorePlacesPage() {
     }));
   }, []);
 
+  const searchItems = useMemo(() => buildDestinationSearchItems(enrichedDestinations), [enrichedDestinations]);
+  const filteredPlaces = useMemo(() => filterBySearch(enrichedDestinations, searchQuery), [enrichedDestinations, searchQuery]);
+
   const handlePlanTrip = () => {
     setIsPlanning(true);
     setTimeout(() => {
@@ -68,13 +72,15 @@ function ExplorePlacesPage() {
   };
 
   // Dummy data to simulate the exact mockup
-  const recommendedPlaces = showAllRecommended ? enrichedDestinations : enrichedDestinations.slice(0, 4);
-  const popularPlaces = showAllPopular ? enrichedDestinations : enrichedDestinations.slice(4, 10);
+  const recommendedSource = searchQuery.trim() ? filteredPlaces : enrichedDestinations;
+  const popularSource = searchQuery.trim() ? filteredPlaces : enrichedDestinations;
+  const recommendedPlaces = showAllRecommended ? recommendedSource : recommendedSource.slice(0, 4);
+  const popularPlaces = showAllPopular ? popularSource : popularSource.slice(4, 10);
   
   // Try to use actual trending ones, fallback if not enough
-  let trendingPlaces = enrichedDestinations.filter(d => d.trending).slice(0, 6);
+  let trendingPlaces = (searchQuery.trim() ? filteredPlaces : enrichedDestinations).filter(d => d.trending).slice(0, 6);
   if (trendingPlaces.length < 6) {
-    trendingPlaces = [...trendingPlaces, ...enrichedDestinations.slice(0, 6 - trendingPlaces.length)];
+    trendingPlaces = [...trendingPlaces, ...filteredPlaces.slice(0, 6 - trendingPlaces.length)];
   }
 
   return (
@@ -92,9 +98,12 @@ function ExplorePlacesPage() {
               <SearchAutocomplete
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
+                onSelect={setSearchQuery}
                 placeholder="Search destination..."
                 inputClassName=""
                 className="explore-search-autocomplete"
+                items={searchItems}
+                storageKey="travelsphere_explore_recent_searches"
               />
             </div>
           </div>
@@ -166,7 +175,7 @@ function ExplorePlacesPage() {
             </a>
           </div>
           <div className="recommended-grid">
-            {recommendedPlaces.map(place => {
+            {recommendedPlaces.length > 0 ? recommendedPlaces.map(place => {
               const slug = place.name.toLowerCase().replace(/\s+/g, "-");
               return (
                 <div key={place.name} className="rec-card" onClick={() => navigate(`/place/${slug}`)} style={{ cursor: 'pointer' }}>
@@ -181,7 +190,9 @@ function ExplorePlacesPage() {
                   </div>
                 </div>
               );
-            })}
+            }) : (
+              <div className="search-section-empty">No results found for "{searchQuery}"</div>
+            )}
           </div>
         </section>
 

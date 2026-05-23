@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useBooking } from '../../context/BookingContext';
 
 export default function SeatSelectionStep() {
-  const { bookingState, updateData } = useBooking();
+  const { bookingState, updateData, clearValidationError } = useBooking();
   const [selectedSeats, setSelectedSeats] = useState(bookingState.seatSelection || []);
 
   const isBus = bookingState.flowType === 'Bus';
@@ -28,6 +28,7 @@ export default function SeatSelectionStep() {
     
     setSelectedSeats(updated);
     updateData('seatSelection', updated);
+    if (updated.length) clearValidationError('seatSelection');
   };
 
   const getSeatClass = (seatId) => {
@@ -122,6 +123,9 @@ export default function SeatSelectionStep() {
           )}
         </div>
       </div>
+      {bookingState.validationErrors?.seatSelection && (
+        <span className="text-red-500 text-xs mt-1">{bookingState.validationErrors.seatSelection}</span>
+      )}
     </div>
   );
 }

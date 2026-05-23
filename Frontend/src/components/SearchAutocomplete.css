@@ -36,6 +36,7 @@
   z-index: 1000;
   overflow: hidden;
   border: 1px solid #e2e8f0;
+  animation: searchDropdownIn 0.22s ease-out;
 }
 
 .search-autocomplete-empty {
@@ -43,6 +44,25 @@
   color: #64748b;
   text-align: center;
   font-size: 0.95rem;
+}
+
+.search-autocomplete-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 20px;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.search-autocomplete-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e2e8f0;
+  border-top-color: #1d4ed8;
+  border-radius: 50%;
+  animation: searchSpin 0.7s linear infinite;
 }
 
 .search-autocomplete-list {
@@ -58,12 +78,13 @@
   padding: 12px 16px;
   border-radius: 10px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.2s;
 }
 
 .search-autocomplete-item:hover,
 .search-autocomplete-item.active {
   background: rgba(29, 78, 216, 0.05);
+  transform: translateX(2px);
 }
 
 .search-autocomplete-item-icon {
@@ -132,5 +153,63 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes searchDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes searchSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.explore-search-autocomplete,
+.itinerary-search-autocomplete {
+  width: 100%;
+}
+
+.explore-search-autocomplete .search-autocomplete-dropdown,
+.itinerary-search-autocomplete .search-autocomplete-dropdown {
+  min-width: 280px;
+}
+
+.search-section-empty {
+  grid-column: 1 / -1;
+  padding: 24px;
+  background: white;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  color: #64748b;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .search-autocomplete-wrapper {
+    width: 100%;
+  }
+
+  .search-autocomplete-dropdown {
+    border-radius: 14px;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  .search-autocomplete-input {
+    font-size: 16px;
+    padding: 16px 20px;
+  }
+
+  .search-autocomplete-item {
+    padding: 12px 14px;
   }
 }

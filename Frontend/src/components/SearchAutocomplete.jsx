@@ -1,38 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, Building, Plane, Map, Train, Navigation } from 'lucide-react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
+import { Search, MapPin, Building, Plane, Map, Train, Navigation, CalendarDays, Sparkles } from 'lucide-react';
+import { DEFAULT_SEARCH_ITEMS, createFuse, normalizeSearchItem } from '../utils/searchCatalog';
 import './SearchAutocomplete.css';
 
-const SUGGESTIONS_DB = [
-  // Cities
-  { type: 'City', text: 'Delhi', icon: <MapPin size={16} /> },
-  { type: 'City', text: 'Dubai', icon: <MapPin size={16} /> },
-  { type: 'City', text: 'Dharamshala', icon: <MapPin size={16} /> },
-  { type: 'City', text: 'Dehradun', icon: <MapPin size={16} /> },
-  { type: 'City', text: 'Mumbai', icon: <MapPin size={16} /> },
-  { type: 'City', text: 'London', icon: <MapPin size={16} /> },
-  { type: 'City', text: 'Paris', icon: <MapPin size={16} /> },
-  { type: 'City', text: 'New York', icon: <MapPin size={16} /> },
-  { type: 'City', text: 'Goa', icon: <MapPin size={16} /> },
-  { type: 'City', text: 'Manali', icon: <MapPin size={16} /> },
-  // Flights
-  { type: 'Flight', text: 'Domestic Flights', icon: <Plane size={16} /> },
-  { type: 'Flight', text: 'International Flights', icon: <Plane size={16} /> },
-  { type: 'Flight', text: 'Delhi to Mumbai Flights', icon: <Plane size={16} /> },
-  // Hotels
-  { type: 'Hotel', text: 'Deluxe Hotels', icon: <Building size={16} /> },
-  { type: 'Hotel', text: 'Luxury Resorts', icon: <Building size={16} /> },
-  { type: 'Hotel', text: 'Budget Hotels', icon: <Building size={16} /> },
-  // Places
-  { type: 'Place', text: 'Taj Mahal', icon: <Map size={16} /> },
-  { type: 'Place', text: 'Eiffel Tower', icon: <Map size={16} /> },
-  { type: 'Place', text: 'Colosseum', icon: <Map size={16} /> },
-  // Transport
-  { type: 'Transport', text: 'Trains to Delhi', icon: <Train size={16} /> },
-  { type: 'Transport', text: 'Airport Cabs', icon: <Navigation size={16} /> },
-  // Packages
-  { type: 'Package', text: 'Honeymoon Packages', icon: <Map size={16} /> },
-  { type: 'Package', text: 'Weekend Getaways', icon: <Map size={16} /> },
-];
+const iconMap = {
+  Destination: <MapPin size={16} />,
+  City: <MapPin size={16} />,
+  Hotel: <Building size={16} />,
+  Transport: <Navigation size={16} />,
+  Flight: <Plane size={16} />,
+  Train: <Train size={16} />,
+  Activity: <Sparkles size={16} />,
+  Itinerary: <CalendarDays size={16} />,
+  Place: <Map size={16} />,
+  Package: <Map size={16} />
+};
 
 export default function SearchAutocomplete({ 
   value, 
@@ -40,24 +22,42 @@ export default function SearchAutocomplete({
   onSelect, 
   placeholder = "Search for destinations...", 
   className = "",
-  inputClassName = "search-autocomplete-input"
+  inputClassName = "search-autocomplete-input",
+  items = DEFAULT_SEARCH_ITEMS,
+  storageKey = "recentSearches",
+  debounceMs = 350,
+  maxResults = 8,
+  isLoading = false,
+  onSubmitSearch
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [recentSearches, setRecentSearches] = useState([]);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [isSearching, setIsSearching] = useState(false);
   const wrapperRef = useRef(null);
+
+  const searchableItems = useMemo(() => (
+    [...items, ...DEFAULT_SEARCH_ITEMS]
+      .filter(Boolean)
+      .map(normalizeSearchItem)
+      .filter((item, index, list) => (
+        item.text && list.findIndex(match => match.text.toLowerCase() === item.text.toLowerCase() && match.type === item.type) === index
+      ))
+  ), [items]);
+
+  const fuse = useMemo(() => createFuse(searchableItems), [searchableItems]);
   
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('recentSearches');
+      const saved = localStorage.getItem(storageKey);
       if (saved) {
         setRecentSearches(JSON.parse(saved));
       }
     } catch (e) {
-      console.error('Failed to parse recent searches', e);
+      setRecentSearches([]);
     }
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -72,28 +72,28 @@ export default function SearchAutocomplete({
   useEffect(() => {
     if (!value || value.trim() === '') {
       setSuggestions([]);
+      setIsSearching(false);
       return;
     }
 
+    setIsSearching(true);
     const timer = setTimeout(() => {
-      const query = value.toLowerCase();
-      const filtered = SUGGESTIONS_DB.filter(item => 
-        item.text.toLowerCase().includes(query)
-      ).slice(0, 8); // Max 8 suggestions
+      const filtered = fuse.search(value.trim()).map(result => result.item).slice(0, maxResults);
       setSuggestions(filtered);
       setIsOpen(true);
       setActiveIndex(-1);
-    }, 200); // Debounce 200ms
+      setIsSearching(false);
+    }, debounceMs);
 
     return () => clearTimeout(timer);
-  }, [value]);
+  }, [debounceMs, fuse, maxResults, value]);
 
-  const handleSelect = (text) => {
+  const handleSelect = (text, submitAfterSelect = false) => {
     // Add to recent searches
     const updatedRecent = [text, ...recentSearches.filter(item => item !== text)].slice(0, 5);
     setRecentSearches(updatedRecent);
     try {
-      localStorage.setItem('recentSearches', JSON.stringify(updatedRecent));
+      localStorage.setItem(storageKey, JSON.stringify(updatedRecent));
     } catch(e) {}
     
     onChange({ target: { value: text } });
@@ -101,13 +101,16 @@ export default function SearchAutocomplete({
       // Allow state update before calling onSelect if it triggers navigation
       setTimeout(() => onSelect(text), 0);
     }
+    if (submitAfterSelect && onSubmitSearch) {
+      setTimeout(() => onSubmitSearch(text), 0);
+    }
     setIsOpen(false);
   };
 
   const handleKeyDown = (e) => {
     if (!isOpen) {
       if (e.key === 'Enter' && value.trim()) {
-        handleSelect(value);
+        handleSelect(value, true);
       }
       return;
     }
@@ -124,12 +127,12 @@ export default function SearchAutocomplete({
       e.preventDefault();
       if (activeIndex >= 0) {
         if (suggestions.length > 0) {
-          handleSelect(suggestions[activeIndex].text);
+          handleSelect(suggestions[activeIndex].text, true);
         } else if (recentSearches.length > 0) {
-          handleSelect(recentSearches[activeIndex]);
+          handleSelect(recentSearches[activeIndex], true);
         }
       } else if (value.trim()) {
-        handleSelect(value);
+        handleSelect(value, true);
       }
     } else if (e.key === 'Escape') {
       setIsOpen(false);
@@ -138,13 +141,14 @@ export default function SearchAutocomplete({
 
   const clearRecent = () => {
     setRecentSearches([]);
-    localStorage.removeItem('recentSearches');
+    localStorage.removeItem(storageKey);
   };
 
   // Helper to highlight matching text
   const renderHighlightedText = (text, highlight) => {
     if (!highlight.trim()) return text;
-    const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
+    const escapedHighlight = highlight.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const parts = text.split(new RegExp(`(${escapedHighlight})`, 'gi'));
     return (
       <span>
         {parts.map((part, i) => 
@@ -166,12 +170,20 @@ export default function SearchAutocomplete({
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
           className={inputClassName}
+          aria-label={placeholder}
+          aria-expanded={isOpen}
+          aria-autocomplete="list"
         />
       </div>
 
       {isOpen && (value.trim() || recentSearches.length > 0) && (
-        <div className="search-autocomplete-dropdown slide-down-anim">
-          {value.trim() && suggestions.length === 0 ? (
+        <div className="search-autocomplete-dropdown slide-down-anim" role="listbox">
+          {(isLoading || isSearching) && value.trim() ? (
+            <div className="search-autocomplete-state">
+              <span className="search-autocomplete-spinner" aria-hidden="true"></span>
+              Searching...
+            </div>
+          ) : value.trim() && suggestions.length === 0 ? (
             <div className="search-autocomplete-empty">
               No results found for "{value}"
             </div>
@@ -183,8 +195,10 @@ export default function SearchAutocomplete({
                   className={`search-autocomplete-item ${index === activeIndex ? 'active' : ''}`}
                   onClick={() => handleSelect(item.text)}
                   onMouseEnter={() => setActiveIndex(index)}
+                  role="option"
+                  aria-selected={index === activeIndex}
                 >
-                  <div className="search-autocomplete-item-icon">{item.icon}</div>
+                  <div className="search-autocomplete-item-icon">{item.icon || iconMap[item.type] || <Search size={16} />}</div>
                   <div className="search-autocomplete-item-text">
                     <span className="text">{renderHighlightedText(item.text, value)}</span>
                     <span className="type">{item.type}</span>

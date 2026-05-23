@@ -6,6 +6,7 @@ import Footer from '../components/Footer';
 import { apiService } from '../services/apiService';
 import { destinations as staticDestinations, mapApiToDestination } from '../data/data';
 import SearchAutocomplete from '../components/SearchAutocomplete';
+import { buildDestinationSearchItems, filterBySearch } from '../utils/searchCatalog';
 
 const features = [
   { title: 'Explore Places', icon: '📍' },
@@ -124,12 +125,9 @@ function HomePage() {
     return () => clearInterval(timer);
   }, []);
 
-  const filteredDestinations = useMemo(() => {
-    if (!search.trim()) return destinations;
-    return destinations.filter(d => 
-      d.name.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [search]);
+  const searchItems = useMemo(() => buildDestinationSearchItems(destinations), [destinations]);
+
+  const filteredDestinations = useMemo(() => filterBySearch(destinations, search), [destinations, search]);
 
   const handleFeatureClick = (title) => {
     const routes = {
@@ -179,6 +177,8 @@ function HomePage() {
                   navigate(`/explore?search=${encodeURIComponent(val)}`);
                 }}
                 placeholder="Search for destinations..."
+                items={searchItems}
+                storageKey="travelsphere_home_recent_searches"
               />
               <button onClick={() => {
                 navigate(`/explore?search=${encodeURIComponent(search)}`);

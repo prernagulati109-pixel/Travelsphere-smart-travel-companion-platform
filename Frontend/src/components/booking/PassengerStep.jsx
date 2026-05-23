@@ -3,7 +3,7 @@ import { useBooking } from '../../context/BookingContext';
 import { User, Mail, Phone, Hash } from 'lucide-react';
 
 export default function PassengerStep() {
-  const { bookingState, updateData } = useBooking();
+  const { bookingState, updateData, clearValidationError } = useBooking();
   const [formData, setFormData] = useState(bookingState.passengerDetails || {
     fullName: '',
     age: '',
@@ -12,7 +12,7 @@ export default function PassengerStep() {
     phone: '',
     passport: ''
   });
-  const [errors, setErrors] = useState({});
+  const errors = bookingState.validationErrors || {};
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -20,10 +20,7 @@ export default function PassengerStep() {
     setFormData(updated);
     updateData('passengerDetails', updated);
     
-    // Clear error
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }));
-    }
+    if (errors[name]) clearValidationError(name);
   };
 
   const isFlight = bookingState.flowType === 'Flight';
@@ -86,12 +83,13 @@ export default function PassengerStep() {
               <input 
                 type="email" 
                 name="email"
-                className="booking-input pl-10"
-                placeholder="john@example.com"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </div>
+              className={`booking-input pl-10 ${errors.email ? 'border-red-500' : ''}`}
+              placeholder="john@example.com"
+              value={formData.email}
+              onChange={handleChange}
+            />
+          </div>
+          {errors.email && <span className="text-red-500 text-xs mt-1">{errors.email}</span>}
           </div>
           <div className="booking-form-group">
             <label>Phone Number</label>
@@ -100,12 +98,13 @@ export default function PassengerStep() {
               <input 
                 type="tel" 
                 name="phone"
-                className="booking-input pl-10"
+                className={`booking-input pl-10 ${errors.phone ? 'border-red-500' : ''}`}
                 placeholder="+91 9876543210"
                 value={formData.phone}
                 onChange={handleChange}
               />
             </div>
+            {errors.phone && <span className="text-red-500 text-xs mt-1">{errors.phone}</span>}
           </div>
         </div>
 
