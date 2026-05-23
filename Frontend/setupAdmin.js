@@ -86,7 +86,7 @@ async function setupAdmin() {
     console.log(`  Role:     admin`);
     console.log(`  UID:      ${uid}`);
     console.log("========================================");
-    // console.log("\nYou can now login at: http://travelsphere-production.up.railway.app/admin/login\n");
+    // console.log("\nYou can now login at: https://travelsphere-production.up.railway.app/admin/login\n");
 
     setTimeout(() => process.exit(0), 2000);
   } catch (firestoreError) {
