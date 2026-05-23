@@ -16,7 +16,7 @@ router.post('/register', async (req, res) => {
 
     const newUser = new User({
       name,
-      email,
+      email,// In a real app,
       password // In a real app, hash this with bcrypt
     });
 
