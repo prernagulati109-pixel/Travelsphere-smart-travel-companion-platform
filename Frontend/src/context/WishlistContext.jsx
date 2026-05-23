@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from './AuthContext';
 
-const API_URL = 'https://travelsphere-production.up.railway.app/api/wishlist';
+const API_URL = 'http://travelsphere-production.up.railway.app/api/wishlist';
 
 const WishlistContext = createContext({
   wishlist: [],
