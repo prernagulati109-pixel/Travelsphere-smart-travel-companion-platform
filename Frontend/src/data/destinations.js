@@ -37,14 +37,14 @@ export const destinationsData = {
     name: "Kyoto",
     country: "Japan",
     flag: "🇯🇵",
-    heroImage: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1400&q=80",
+    heroImage: "https://www.weroad.it/blog/wp-content/uploads/2023/01/kyoto-2.jpg",
     tagline: "Ancient Tradition",
     description: "Ancient capital of Japan, famous for its numerous classical Buddhist temples and gardens.",
     about: "Kyoto, once the capital of Japan for over a thousand years, is a city where ancient traditions beautifully coexist with modern life. With over 2,000 temples and shrines, stunning bamboo groves, traditional tea houses, and geisha districts, Kyoto offers an unparalleled journey into Japanese culture.",
     rating: 4.7,
     reviewsCount: "1.2K",
     gallery: [
-      "https://images.unsplash.com/photo-1545562083-a600704fa487?auto=format&fit=crop&w=600&q=80",
+      "https://www.agoda.com/wp-content/uploads/2024/02/Kyoto-UNESCO-sites-in-Japan.jpg",
       "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80",
       "https://images.unsplash.com/photo-1528360983277-13d401cdc186?auto=format&fit=crop&w=600&q=80"
     ],
@@ -59,8 +59,8 @@ export const destinationsData = {
       voltage: "100V, 50/60Hz"
     },
     places: [
-      { id: 101, name: "Fushimi Inari-taisha", category: "Landmarks", price: 0, rating: 4.9, reviews: "20K", time: "2-3 hrs", badge: "Iconic", image: "https://images.unsplash.com/photo-1528360983277-13d401cdc186?auto=format&fit=crop&w=600&q=80" },
-      { id: 102, name: "Arashiyama Bamboo Grove", category: "Adventure", price: 0, rating: 4.7, reviews: "15K", time: "1-2 hrs", badge: "Must Visit", image: "https://images.unsplash.com/photo-1552423814-2485230ca32c?auto=format&fit=crop&w=600&q=80" }
+      { id: 101, name: "Fushimi Inari-taisha", category: "Landmarks", price: 1000, rating: 4.9, reviews: "20K", time: "2-3 hrs", badge: "Iconic", image: "https://images.unsplash.com/photo-1528360983277-13d401cdc186?auto=format&fit=crop&w=600&q=80" },
+      { id: 102, name: "Arashiyama Bamboo Grove", category: "Adventure", price: 600, rating: 4.7, reviews: "15K", time: "1-2 hrs", badge: "Must Visit", image: "https://www.travelcaffeine.com/wp-content/uploads/2016/12/arashiyama-bamboo-grove-kyoto-japan-701.jpg" }
     ]
   },
   "maldives": {
@@ -117,7 +117,7 @@ export const destinationsData = {
     },
     places: [
       { id: 301, name: "Statue of Liberty", category: "Landmarks", price: 2000, rating: 4.8, reviews: "25K", time: "3 hrs", badge: "Iconic", image: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=900&q=80" },
-      { id: 302, name: "Central Park", category: "Adventure", price: 0, rating: 4.9, reviews: "50K", time: "2-4 hrs", badge: "Must Visit", image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=900&q=80" }
+      { id: 302, name: "Central Park", category: "Adventure", price: 200, rating: 4.9, reviews: "50K", time: "2-4 hrs", badge: "Must Visit", image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&w=900&q=80" }
     ]
   },
   "tokyo": {
@@ -229,7 +229,7 @@ export const destinationsData = {
       voltage: "230V, 50Hz"
     },
     places: [
-      { id: 801, name: "Oia Village", category: "Landmarks", price: 0, rating: 4.9, reviews: "25K", time: "2-4 hrs", badge: "Must Visit", image: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=900&q=80" }
+      { id: 801, name: "Oia Village", category: "Landmarks", price: 1000, rating: 4.9, reviews: "25K", time: "2-4 hrs", badge: "Must Visit", image: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=900&q=80" }
     ]
   },
   "dubai": {
@@ -285,7 +285,7 @@ export const destinationsData = {
       voltage: "230V, 50Hz"
     },
     places: [
-      { id: 1001, name: "Big Ben", category: "Landmarks", price: 0, rating: 4.8, reviews: "40K", time: "1 hr", badge: "Classic", image: "https://wallup.net/wp-content/uploads/2019/09/349171-united-kingdom-rivers-bridges-houses-sky-london-big-ben-cities.jpg" }
+      { id: 1001, name: "Big Ben", category: "Landmarks", price: 700, rating: 4.8, reviews: "40K", time: "1 hr", badge: "Classic", image: "https://wallup.net/wp-content/uploads/2019/09/349171-united-kingdom-rivers-bridges-houses-sky-london-big-ben-cities.jpg" }
     ]
   },
   "sydney": {
@@ -369,7 +369,7 @@ export const destinationsData = {
       voltage: "230V, 50Hz"
     },
     places: [
-      { id: 1301, name: "Hagia Sophia", category: "Landmarks", price: 0, rating: 4.9, reviews: "45K", time: "2 hrs", badge: "Iconic", image: "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?auto=format&fit=crop&w=900&q=80" }
+      { id: 1301, name: "Hagia Sophia", category: "Landmarks", price: 900, rating: 4.9, reviews: "45K", time: "2 hrs", badge: "Iconic", image: "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?auto=format&fit=crop&w=900&q=80" }
     ]
   },
   "barcelona": {
